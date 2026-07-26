@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ensurePersonaLinked } from "@/lib/actions/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [modo, setModo] = useState<"login" | "signup">("login");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -33,8 +31,7 @@ export default function LoginPage() {
         return;
       }
       await ensurePersonaLinked(nombre);
-      router.push("/proyectos");
-      router.refresh();
+      window.location.href = "/proyectos";
       return;
     }
 
@@ -45,8 +42,7 @@ export default function LoginPage() {
       return;
     }
     await ensurePersonaLinked(nombre);
-    router.push("/proyectos");
-    router.refresh();
+    window.location.href = "/proyectos";
   }
 
   return (

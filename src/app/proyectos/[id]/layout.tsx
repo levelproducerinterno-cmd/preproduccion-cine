@@ -12,6 +12,7 @@ export default async function ProyectoLayout(
     { href: `/proyectos/${id}/crew`, label: "Crew" },
     { href: `/proyectos/${id}/guion`, label: "Guion" },
     { href: `/proyectos/${id}/escenas`, label: "Escenas / Desglose" },
+    ...(esAdOProduccion ? [{ href: `/proyectos/${id}/ajustes`, label: "Ajustes" }] : []),
   ];
 
   return (
