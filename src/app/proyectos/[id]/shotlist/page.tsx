@@ -3,6 +3,8 @@ import { eliminarToma } from "./actions";
 import TomaForm from "./TomaForm";
 import ShotlistPdfBoton from "./ShotlistPdfBoton";
 import type { Escena, Toma } from "@/lib/types";
+import { extraerSegmentosPorEscena } from "@/lib/guion-parse";
+import EscenaTexto from "@/components/EscenaTexto";
 
 export default async function ShotlistPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -16,6 +18,15 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
     .select("id, proyecto_id, guion_id, numero, int_ext, locacion, momento, orden, dia_rodaje_numero, orden_del_dia")
     .eq("proyecto_id", proyectoId)
     .order("orden");
+
+  const { data: guion } = await supabase
+    .from("guiones")
+    .select("contenido")
+    .eq("proyecto_id", proyectoId)
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const segmentosGuion = extraerSegmentosPorEscena(guion?.contenido ?? "");
 
   const { data: tomasRaw } = await supabase
     .from("tomas")
@@ -33,7 +44,12 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
   return (
     <div className="grid gap-4">
       <div className="flex justify-end">
-        <ShotlistPdfBoton proyectoId={proyectoId} nombreProyecto={proyecto.nombre} />
+        <ShotlistPdfBoton
+          proyectoId={proyectoId}
+          nombreProyecto={proyecto.nombre}
+          logoUrl={proyecto.logo_url}
+          colorPrimario={proyecto.color_primario}
+        />
       </div>
 
       {(escenas ?? []).length === 0 && (
@@ -42,7 +58,7 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
         </p>
       )}
 
-      {(escenas as Escena[] | null)?.map((esc) => {
+      {(escenas as Escena[] | null)?.map((esc, idx) => {
         const tomas = tomasPorEscena.get(esc.id) ?? [];
         return (
           <details key={esc.id} className="rounded-lg border border-neutral-200 bg-white shadow-sm" open>
@@ -53,6 +69,7 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
               </span>
             </summary>
             <div className="border-t border-neutral-100 p-5">
+              <EscenaTexto texto={segmentosGuion[idx] ?? ""} />
               <div className="grid gap-2">
                 {tomas.map((t) => (
                   <div key={t.id} className="flex gap-3 rounded border border-neutral-100 bg-neutral-50 p-3">

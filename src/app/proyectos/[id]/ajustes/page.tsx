@@ -1,6 +1,7 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
 import { redirect } from "next/navigation";
 import { actualizarProyecto } from "./actions";
+import LogoUpload from "./LogoUpload";
 
 export default async function AjustesPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -9,8 +10,21 @@ export default async function AjustesPage(props: { params: Promise<{ id: string 
   if (!esAdOProduccion) redirect(`/proyectos/${proyectoId}/crew`);
 
   return (
-    <div className="max-w-lg">
-      <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
+    <div className="max-w-lg grid gap-6">
+      <section>
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
+          Logo de la productora
+        </h2>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          <LogoUpload proyectoId={proyectoId} logoActual={proyecto.logo_url} />
+          <p className="mt-3 text-xs text-neutral-400">
+            Este logo y los colores de abajo aparecen en el encabezado de todos los PDF que se
+            generen en este proyecto (datos de producción, shotlist, presupuesto, contratos...).
+          </p>
+        </div>
+      </section>
+
+      <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-500">
         Ajustes del proyecto
       </h2>
       <form
@@ -58,6 +72,30 @@ export default async function AjustesPage(props: { params: Promise<{ id: string 
               Puedes actualizarla cuando cambie el rodaje — el calendario de preproducción se
               recalculará a partir de esta fecha.
             </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
+              Color primario
+            </label>
+            <input
+              type="color"
+              name="color_primario"
+              defaultValue={proyecto.color_primario}
+              className="h-10 w-full rounded border border-neutral-300"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
+              Color secundario
+            </label>
+            <input
+              type="color"
+              name="color_secundario"
+              defaultValue={proyecto.color_secundario}
+              className="h-10 w-full rounded border border-neutral-300"
+            />
           </div>
         </div>
         <button className="mt-2 rounded bg-rojo py-3 font-semibold text-hueso hover:brightness-110">

@@ -46,7 +46,7 @@ export async function crearProyecto(formData: FormData) {
     .single();
   if (crewError || !crew) {
     console.error(crewError);
-    redirect(`/proyectos/${proyecto.id}/crew`);
+    redirect(`/proyectos/${proyecto.id}/datos`);
   }
 
   const { data: depto } = await supabase
@@ -60,5 +60,5 @@ export async function crearProyecto(formData: FormData) {
       .insert({ proyecto_crew_id: crew!.id, departamento_id: depto.id });
   }
 
-  redirect(`/proyectos/${proyecto.id}/crew`);
+  redirect(`/proyectos/${proyecto.id}/datos`);
 }

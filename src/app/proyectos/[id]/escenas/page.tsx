@@ -6,6 +6,8 @@ import {
   agregarCategoriaCustom,
 } from "./actions";
 import type { DesgloseElemento, Escena, Departamento, DesgloseCategoria } from "@/lib/types";
+import { extraerSegmentosPorEscena } from "@/lib/guion-parse";
+import EscenaTexto from "@/components/EscenaTexto";
 
 export default async function EscenasPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -16,6 +18,15 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
     .select("id, proyecto_id, guion_id, numero, int_ext, locacion, momento, orden, dia_rodaje_numero, orden_del_dia")
     .eq("proyecto_id", proyectoId)
     .order("orden");
+
+  const { data: guion } = await supabase
+    .from("guiones")
+    .select("contenido")
+    .eq("proyecto_id", proyectoId)
+    .order("version", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const segmentosGuion = extraerSegmentosPorEscena(guion?.contenido ?? "");
 
   const { data: categorias } = await supabase
     .from("desglose_categorias")
@@ -71,7 +82,7 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
         </p>
       )}
 
-      {(escenas as Escena[] | null)?.map((esc) => {
+      {(escenas as Escena[] | null)?.map((esc, idx) => {
         const elementos = (elementosPorEscena.get(esc.id) ?? []).filter(puedeVerElemento);
         return (
           <details key={esc.id} className="rounded-lg border border-neutral-200 bg-white shadow-sm" open>
@@ -79,6 +90,7 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
               Escena {esc.numero} — {esc.int_ext ?? "?"}. {esc.locacion ?? "Sin locación"} - {esc.momento ?? "?"}
             </summary>
             <div className="border-t border-neutral-100 p-5">
+              <EscenaTexto texto={segmentosGuion[idx] ?? ""} />
               <div className="grid gap-2">
                 {elementos.map((el) => (
                   <div

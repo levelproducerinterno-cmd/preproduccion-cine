@@ -17,7 +17,7 @@ export async function getProyectoContext(proyectoId: string) {
 
   const { data: proyecto } = await supabase
     .from("proyectos")
-    .select("id, nombre, tipo, fecha_dia1_rodaje")
+    .select("id, nombre, tipo, fecha_dia1_rodaje, logo_url, color_primario, color_secundario")
     .eq("id", proyectoId)
     .single();
   if (!proyecto) redirect("/proyectos");

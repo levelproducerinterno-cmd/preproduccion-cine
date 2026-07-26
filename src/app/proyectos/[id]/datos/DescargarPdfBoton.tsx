@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 import { obtenerRespuestasPersona } from "./actions";
+import { crearDocumentoConMachote, finalizarConPiePagina } from "@/lib/pdf-machote";
 
-export default function DescargarPdfBoton({ crewId }: { crewId: string }) {
+export default function DescargarPdfBoton({
+  crewId,
+  proyectoNombre,
+  logoUrl,
+  colorPrimario,
+}: {
+  crewId: string;
+  proyectoNombre: string;
+  logoUrl: string | null;
+  colorPrimario: string;
+}) {
   const [cargando, setCargando] = useState(false);
 
   async function descargar() {
@@ -13,18 +24,21 @@ export default function DescargarPdfBoton({ crewId }: { crewId: string }) {
       setCargando(false);
       return;
     }
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
 
-    doc.setFontSize(16);
-    doc.text("Datos de producción", 14, 18);
+    const doc = await crearDocumentoConMachote({
+      tituloDocumento: "Datos de producción",
+      proyectoNombre,
+      logoUrl,
+      colorPrimario,
+    });
+
     doc.setFontSize(11);
-    doc.text(datos.nombre, 14, 28);
+    doc.text(datos.nombre, 14, 42);
     doc.setFontSize(9);
     doc.setTextColor(120);
-    doc.text(`${datos.email}${datos.puesto ? " · " + datos.puesto : ""}`, 14, 34);
+    doc.text(`${datos.email}${datos.puesto ? " · " + datos.puesto : ""}`, 14, 48);
 
-    let y = 46;
+    let y = 58;
     doc.setTextColor(0);
     for (const item of datos.items) {
       if (y > 275) {
@@ -43,6 +57,7 @@ export default function DescargarPdfBoton({ crewId }: { crewId: string }) {
       y += respuestaLines.length * 5 + 6;
     }
 
+    await finalizarConPiePagina(doc);
     doc.save(`datos-produccion-${datos.nombre.replace(/\s+/g, "-").toLowerCase()}.pdf`);
     setCargando(false);
   }

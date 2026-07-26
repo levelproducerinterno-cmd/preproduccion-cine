@@ -20,6 +20,9 @@ export type Proyecto = {
   fecha_dia1_rodaje: string | null;
   created_by: string | null;
   created_at: string;
+  logo_url: string | null;
+  color_primario: string;
+  color_secundario: string;
 };
 
 export type StatusConfirmacion = "confirmado" | "por_confirmar" | "declinado";

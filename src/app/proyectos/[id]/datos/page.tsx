@@ -12,7 +12,7 @@ type CrewConPersona = {
 
 export default async function DatosPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
-  const { supabase, esAdOProduccion, miCrewId } = await getProyectoContext(proyectoId);
+  const { supabase, esAdOProduccion, miCrewId, proyecto } = await getProyectoContext(proyectoId);
 
   const { data: preguntasRaw } = await supabase
     .from("preguntas_registro")
@@ -143,7 +143,12 @@ export default async function DatosPage(props: { params: Promise<{ id: string }>
                     >
                       {respondidas}/{preguntas.length} respondidas
                     </span>
-                    <DescargarPdfBoton crewId={crew.id} />
+                    <DescargarPdfBoton
+                      crewId={crew.id}
+                      proyectoNombre={proyecto.nombre}
+                      logoUrl={proyecto.logo_url}
+                      colorPrimario={proyecto.color_primario}
+                    />
                   </div>
                 </div>
               ))}

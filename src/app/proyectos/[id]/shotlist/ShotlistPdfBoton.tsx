@@ -2,35 +2,33 @@
 
 import { useState } from "react";
 import { obtenerShotlistCompleto } from "./actions";
+import { crearDocumentoConMachote, finalizarConPiePagina, imagenUrlABase64 } from "@/lib/pdf-machote";
 
-async function imagenABase64(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-}
-
-export default function ShotlistPdfBoton({ proyectoId, nombreProyecto }: { proyectoId: string; nombreProyecto: string }) {
+export default function ShotlistPdfBoton({
+  proyectoId,
+  nombreProyecto,
+  logoUrl,
+  colorPrimario,
+}: {
+  proyectoId: string;
+  nombreProyecto: string;
+  logoUrl: string | null;
+  colorPrimario: string;
+}) {
   const [cargando, setCargando] = useState(false);
 
   async function descargar() {
     setCargando(true);
     const { escenas, tomas } = await obtenerShotlistCompleto(proyectoId);
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
 
-    let y = 20;
-    doc.setFontSize(16);
-    doc.text(`Shotlist — ${nombreProyecto}`, 14, y);
-    y += 12;
+    const doc = await crearDocumentoConMachote({
+      tituloDocumento: "Shotlist",
+      proyectoNombre: nombreProyecto,
+      logoUrl,
+      colorPrimario,
+    });
+
+    let y = 42;
 
     for (const esc of escenas) {
       const tomasEscena = tomas.filter((t) => t.escena_id === esc.id);
@@ -77,7 +75,7 @@ export default function ShotlistPdfBoton({ proyectoId, nombreProyecto }: { proye
           y += 5;
         }
         if (t.imagen_url) {
-          const dataUrl = await imagenABase64(t.imagen_url);
+          const dataUrl = await imagenUrlABase64(t.imagen_url);
           if (dataUrl) {
             if (y > 220) {
               doc.addPage();
@@ -96,6 +94,7 @@ export default function ShotlistPdfBoton({ proyectoId, nombreProyecto }: { proye
       y += 4;
     }
 
+    await finalizarConPiePagina(doc);
     doc.save(`shotlist-${nombreProyecto.replace(/\s+/g, "-").toLowerCase()}.pdf`);
     setCargando(false);
   }

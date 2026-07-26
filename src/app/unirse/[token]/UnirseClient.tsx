@@ -74,7 +74,7 @@ export default function UnirseClient({
       setCargando(false);
       return;
     }
-    window.location.href = `/proyectos/${data}/crew`;
+    window.location.href = `/proyectos/${data}/datos`;
   }
 
   return (
