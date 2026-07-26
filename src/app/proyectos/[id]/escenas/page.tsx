@@ -1,13 +1,9 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
-import {
-  agregarElemento,
-  actualizarStatusElemento,
-  eliminarElemento,
-  agregarCategoriaCustom,
-} from "./actions";
+import { actualizarStatusElemento, eliminarElemento, agregarCategoriaCustom } from "./actions";
 import type { DesgloseElemento, Escena, Departamento, DesgloseCategoria } from "@/lib/types";
 import { extraerSegmentosPorEscena } from "@/lib/guion-parse";
 import EscenaTexto from "@/components/EscenaTexto";
+import DesgloseForm from "./DesgloseForm";
 
 export default async function EscenasPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -37,6 +33,12 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
   const { data: departamentos } = await supabase
     .from("departamentos")
     .select("id, nombre, orden")
+    .order("orden");
+
+  const { data: rubros } = await supabase
+    .from("presupuesto_rubros")
+    .select("id, nombre, orden")
+    .or(`proyecto_id.eq.${proyectoId},proyecto_id.is.null`)
     .order("orden");
 
   const { data: elementosRaw } = await supabase
@@ -148,36 +150,13 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
               </div>
 
               {esAdOProduccion && (
-                <form
-                  action={agregarElemento.bind(null, proyectoId, esc.id)}
-                  className="mt-4 grid grid-cols-2 gap-2 border-t border-neutral-100 pt-4 md:grid-cols-5"
-                >
-                  <select name="categoria_id" required className="rounded border border-neutral-300 px-2 py-2 text-sm">
-                    {(categorias as DesgloseCategoria[] | null)?.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    name="descripcion"
-                    placeholder="Descripción"
-                    required
-                    className="col-span-2 rounded border border-neutral-300 px-2 py-2 text-sm md:col-span-1"
-                  />
-                  <input name="notas" placeholder="Notas" className="rounded border border-neutral-300 px-2 py-2 text-sm" />
-                  <select name="departamento_id" className="rounded border border-neutral-300 px-2 py-2 text-sm">
-                    <option value="">Depto. responsable</option>
-                    {(departamentos as Departamento[] | null)?.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="rounded bg-rojo px-3 py-2 text-sm font-semibold text-hueso hover:brightness-110">
-                    + Agregar
-                  </button>
-                </form>
+                <DesgloseForm
+                  proyectoId={proyectoId}
+                  escenaId={esc.id}
+                  categorias={(categorias as DesgloseCategoria[] | null) ?? []}
+                  departamentos={(departamentos as Departamento[] | null) ?? []}
+                  rubros={rubros ?? []}
+                />
               )}
             </div>
           </details>

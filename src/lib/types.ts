@@ -23,6 +23,8 @@ export type Proyecto = {
   logo_url: string | null;
   color_primario: string;
   color_secundario: string;
+  firma_url: string | null;
+  nombre_responsable: string | null;
 };
 
 export type StatusConfirmacion = "confirmado" | "por_confirmar" | "declinado";

@@ -6,7 +6,7 @@ export default async function ProyectoLayout(
   props: { children: React.ReactNode } & { params: Promise<{ id: string }> }
 ) {
   const { id } = await props.params;
-  const { proyecto, persona, esAdOProduccion } = await getProyectoContext(id);
+  const { proyecto, persona, esAdOProduccion, miDepartamentos } = await getProyectoContext(id);
 
   const tabs = [
     { href: `/proyectos/${id}/crew`, label: "Crew" },
@@ -16,6 +16,8 @@ export default async function ProyectoLayout(
     { href: `/proyectos/${id}/shotlist`, label: "Shotlist" },
     { href: `/proyectos/${id}/calendario`, label: "Calendario" },
     { href: `/proyectos/${id}/presupuesto`, label: "Presupuesto" },
+    ...(miDepartamentos.includes("Dirección/AD") ? [{ href: `/proyectos/${id}/ideas`, label: "Ideas" }] : []),
+    ...(esAdOProduccion ? [{ href: `/proyectos/${id}/documentos`, label: "Documentos" }] : []),
     ...(esAdOProduccion ? [{ href: `/proyectos/${id}/ajustes`, label: "Ajustes" }] : []),
   ];
 

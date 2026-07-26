@@ -20,16 +20,45 @@ export async function agregarElemento(proyectoId: string, escenaId: string, form
     .eq("auth_user_id", user!.id)
     .single();
 
-  await supabase.from("desglose_elementos").insert({
-    escena_id: escenaId,
-    categoria_id: categoriaId,
-    descripcion,
-    notas,
-    departamento_id: departamentoId,
-    created_by: persona?.id ?? null,
-  });
+  const { data: elemento, error } = await supabase
+    .from("desglose_elementos")
+    .insert({
+      escena_id: escenaId,
+      categoria_id: categoriaId,
+      descripcion,
+      notas,
+      departamento_id: departamentoId,
+      created_by: persona?.id ?? null,
+    })
+    .select("id")
+    .single();
+
+  const aplicaPresupuesto = formData.get("aplica_presupuesto") === "on";
+  if (!error && elemento && aplicaPresupuesto && departamentoId) {
+    const rubroId = String(formData.get("presupuesto_rubro_id") || "");
+    const cantidad = Number(formData.get("presupuesto_cantidad") || 1);
+    const tipoUnidad = String(formData.get("presupuesto_tipo_unidad") || "Unidad");
+    const costoUnitario = Number(formData.get("presupuesto_costo_unitario") || 0);
+    const importancia = String(formData.get("presupuesto_importancia") || "Obligatorio");
+
+    if (rubroId) {
+      await supabase.from("presupuesto_items").insert({
+        proyecto_id: proyectoId,
+        departamento_id: departamentoId,
+        rubro_id: rubroId,
+        objeto_especifico: descripcion,
+        cantidad,
+        tipo_unidad: tipoUnidad,
+        costo_unitario: costoUnitario,
+        importancia,
+        desglose_elemento_id: elemento.id,
+        created_by: persona?.id ?? null,
+      });
+    }
+  }
 
   revalidatePath(`/proyectos/${proyectoId}/escenas`);
+  revalidatePath(`/proyectos/${proyectoId}/presupuesto`);
 }
 
 export async function actualizarStatusElemento(

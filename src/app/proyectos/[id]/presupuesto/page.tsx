@@ -211,6 +211,7 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
                   <option>Día</option>
                   <option>Unidad</option>
                   <option>Viajes</option>
+                  <option>Personas</option>
                   <option>Otro</option>
                 </select>
               </div>

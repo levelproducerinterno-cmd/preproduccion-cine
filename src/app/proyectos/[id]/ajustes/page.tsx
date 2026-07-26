@@ -2,6 +2,7 @@ import { getProyectoContext } from "@/lib/proyecto-context";
 import { redirect } from "next/navigation";
 import { actualizarProyecto } from "./actions";
 import LogoUpload from "./LogoUpload";
+import FirmaUpload from "./FirmaUpload";
 
 export default async function AjustesPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -20,6 +21,19 @@ export default async function AjustesPage(props: { params: Promise<{ id: string 
           <p className="mt-3 text-xs text-neutral-400">
             Este logo y los colores de abajo aparecen en el encabezado de todos los PDF que se
             generen en este proyecto (datos de producción, shotlist, presupuesto, contratos...).
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
+          Firma del responsable
+        </h2>
+        <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          <FirmaUpload proyectoId={proyectoId} firmaActual={proyecto.firma_url} />
+          <p className="mt-3 text-xs text-neutral-400">
+            Sube una foto/escaneo de la firma. Aparece en los documentos y contratos que generes en
+            la pestaña "Documentos".
           </p>
         </div>
       </section>
@@ -73,6 +87,17 @@ export default async function AjustesPage(props: { params: Promise<{ id: string 
               recalculará a partir de esta fecha.
             </p>
           </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
+            Nombre del responsable (para documentos y contratos)
+          </label>
+          <input
+            name="nombre_responsable"
+            defaultValue={proyecto.nombre_responsable ?? ""}
+            placeholder="Ej. Sofía Loarca"
+            className="w-full rounded border border-neutral-300 px-3 py-2 focus:border-rojo focus:outline-none"
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
