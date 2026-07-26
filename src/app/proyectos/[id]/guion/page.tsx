@@ -9,7 +9,7 @@ export default async function GuionPage(props: { params: Promise<{ id: string }>
 
   const { data: guion } = await supabase
     .from("guiones")
-    .select("id, titulo, version")
+    .select("id, titulo, version, contenido")
     .eq("proyecto_id", proyectoId)
     .order("version", { ascending: false })
     .limit(1)
@@ -32,18 +32,18 @@ export default async function GuionPage(props: { params: Promise<{ id: string }>
     );
   }
 
-  const { data: bloques } = await supabase
-    .from("guion_bloques")
-    .select("id, guion_id, escena_id, orden, tipo, contenido")
-    .eq("guion_id", guion.id)
-    .order("orden");
+  const { count } = await supabase
+    .from("escenas")
+    .select("id", { count: "exact", head: true })
+    .eq("guion_id", guion.id);
 
   return (
     <GuionEditor
       proyectoId={proyectoId}
       guionId={guion.id}
-      bloquesIniciales={bloques ?? []}
+      contenidoInicial={guion.contenido ?? ""}
       puedeEditar={puedeEditar}
+      numEscenas={count ?? 0}
     />
   );
 }

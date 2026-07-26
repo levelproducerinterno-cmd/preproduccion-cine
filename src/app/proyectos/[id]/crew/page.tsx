@@ -1,5 +1,12 @@
+import { headers } from "next/headers";
 import { getProyectoContext } from "@/lib/proyecto-context";
-import { agregarCrew, actualizarStatusConfirmacion, eliminarCrew } from "./actions";
+import {
+  agregarCrew,
+  actualizarStatusConfirmacion,
+  eliminarCrew,
+  generarInvitacion,
+  desactivarInvitacion,
+} from "./actions";
 import type { Departamento, ProyectoCrew } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -32,6 +39,22 @@ export default async function CrewPage(props: { params: Promise<{ id: string }> 
 
   const crew = (crewRaw ?? []) as unknown as ProyectoCrew[];
   const hoy = new Date().toISOString().slice(0, 10);
+
+  let invitaciones: { id: string; token: string; created_at: string }[] = [];
+  let origin = "";
+  if (esAdOProduccion) {
+    const { data } = await supabase
+      .from("invitaciones")
+      .select("id, token, created_at")
+      .eq("proyecto_id", proyectoId)
+      .eq("activa", true)
+      .order("created_at", { ascending: false });
+    invitaciones = data ?? [];
+    const h = await headers();
+    const host = h.get("host");
+    const protocol = host?.startsWith("localhost") ? "http" : "https";
+    origin = host ? `${protocol}://${host}` : "";
+  }
 
   return (
     <div className="grid gap-8">
@@ -117,6 +140,36 @@ export default async function CrewPage(props: { params: Promise<{ id: string }> 
           {crew.length === 0 && <p className="text-neutral-500">Aún no hay crew en este proyecto.</p>}
         </div>
       </section>
+
+      {esAdOProduccion && (
+        <section>
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
+            Links de invitación (auto-registro)
+          </h2>
+          <div className="grid gap-3 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+            <p className="text-sm text-neutral-500">
+              Comparte este link con alguien del crew: crea su cuenta y elige su propio puesto y
+              departamento(s) directamente en este proyecto, sin que tengas que darla de alta a mano.
+            </p>
+            {invitaciones.map((inv) => (
+              <div
+                key={inv.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded border border-neutral-100 bg-neutral-50 px-3 py-2"
+              >
+                <code className="text-xs text-neutral-700">{origin}/unirse/{inv.token}</code>
+                <form action={desactivarInvitacion.bind(null, proyectoId, inv.id)}>
+                  <button className="text-xs text-neutral-400 hover:text-rojo">Desactivar</button>
+                </form>
+              </div>
+            ))}
+            <form action={generarInvitacion.bind(null, proyectoId)}>
+              <button className="rounded bg-neutral-800 px-4 py-2 text-sm font-semibold text-hueso hover:brightness-110">
+                + Generar nuevo link
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
 
       {esAdOProduccion && (
         <section>

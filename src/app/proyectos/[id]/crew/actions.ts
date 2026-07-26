@@ -79,3 +79,27 @@ export async function eliminarCrew(proyectoId: string, crewId: string) {
   await supabase.from("proyecto_crew").delete().eq("id", crewId);
   revalidatePath(`/proyectos/${proyectoId}/crew`);
 }
+
+export async function generarInvitacion(proyectoId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: persona } = await supabase
+    .from("personas")
+    .select("id")
+    .eq("auth_user_id", user!.id)
+    .single();
+
+  await supabase
+    .from("invitaciones")
+    .insert({ proyecto_id: proyectoId, creado_por: persona?.id ?? null });
+
+  revalidatePath(`/proyectos/${proyectoId}/crew`);
+}
+
+export async function desactivarInvitacion(proyectoId: string, invitacionId: string) {
+  const supabase = await createClient();
+  await supabase.from("invitaciones").update({ activa: false }).eq("id", invitacionId);
+  revalidatePath(`/proyectos/${proyectoId}/crew`);
+}

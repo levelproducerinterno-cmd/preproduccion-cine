@@ -12,6 +12,8 @@ export default async function ProyectoLayout(
     { href: `/proyectos/${id}/crew`, label: "Crew" },
     { href: `/proyectos/${id}/guion`, label: "Guion" },
     { href: `/proyectos/${id}/escenas`, label: "Escenas / Desglose" },
+    { href: `/proyectos/${id}/calendario`, label: "Calendario" },
+    { href: `/proyectos/${id}/presupuesto`, label: "Presupuesto" },
     ...(esAdOProduccion ? [{ href: `/proyectos/${id}/ajustes`, label: "Ajustes" }] : []),
   ];
 

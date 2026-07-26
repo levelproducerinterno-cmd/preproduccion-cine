@@ -28,8 +28,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
+  const isInviteRoute = request.nextUrl.pathname.startsWith("/unirse");
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isAuthRoute && !isInviteRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
