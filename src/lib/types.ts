@@ -96,3 +96,22 @@ export type DesgloseElemento = {
   desglose_categorias: DesgloseCategoria;
   departamentos: Departamento | null;
 };
+
+export type Toma = {
+  id: string;
+  escena_id: string;
+  setup_num: string | null;
+  shot_num: string | null;
+  subject: string | null;
+  shot_size: string | null;
+  camara: string | null;
+  angulo: string | null;
+  movimiento: string | null;
+  equipo: string | null;
+  lente: string | null;
+  sonido: string | null;
+  descripcion: string | null;
+  notas: string | null;
+  imagen_url: string | null;
+  orden: number;
+};
