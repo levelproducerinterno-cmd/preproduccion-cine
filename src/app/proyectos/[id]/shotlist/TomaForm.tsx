@@ -134,6 +134,13 @@ export default function TomaForm({ proyectoId, escenaId }: { proyectoId: string;
         <CampoConOtro campo="lente" />
         <CampoConOtro campo="sonido" />
       </div>
+      <div>
+        <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Importancia</label>
+        <select name="importancia" defaultValue="Obligatorio" className="w-full max-w-xs rounded border border-neutral-300 px-2 py-2 text-sm">
+          <option value="Obligatorio">Obligatorio</option>
+          <option value="Bien si se toma">Bien si se toma</option>
+        </select>
+      </div>
       <input name="descripcion" placeholder="Descripción de la toma" className="rounded border border-neutral-300 px-2 py-2 text-sm" />
       <input name="notas" placeholder="Notas" className="rounded border border-neutral-300 px-2 py-2 text-sm" />
       <div className="flex flex-wrap items-center gap-3">

@@ -12,6 +12,7 @@ type Item = {
   tipo_unidad: string;
   costo_unitario: number;
   subtotal: number;
+  importancia: "Obligatorio" | "Bien si se toma";
   departamentos: { nombre: string };
   presupuesto_rubros: { nombre: string };
 };
@@ -41,7 +42,7 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
   const { data: itemsRaw } = await supabase
     .from("presupuesto_items")
     .select(
-      "id, departamento_id, rubro_id, objeto_especifico, cantidad, tipo_unidad, costo_unitario, subtotal, departamentos(nombre), presupuesto_rubros(nombre)"
+      "id, departamento_id, rubro_id, objeto_especifico, cantidad, tipo_unidad, costo_unitario, subtotal, importancia, departamentos(nombre), presupuesto_rubros(nombre)"
     )
     .eq("proyecto_id", proyectoId)
     .order("created_at", { ascending: false });
@@ -67,47 +68,55 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
 
         {[...porDepartamento.entries()].map(([depNombre, depItems]) => {
           const totalDep = depItems.reduce((s, it) => s + Number(it.subtotal), 0);
-          const porRubro = new Map<string, Item[]>();
-          for (const it of depItems) {
-            const key = it.presupuesto_rubros.nombre;
-            porRubro.set(key, [...(porRubro.get(key) ?? []), it]);
-          }
           return (
             <div key={depNombre} className="mb-6 rounded-lg border border-neutral-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50 px-5 py-3">
                 <h3 className="font-semibold text-negro">{depNombre}</h3>
                 <span className="font-semibold text-negro">{moneda(totalDep)}</span>
               </div>
-              <div className="divide-y divide-neutral-100">
-                {[...porRubro.entries()].map(([rubroNombre, rubroItems]) => {
-                  const totalRubro = rubroItems.reduce((s, it) => s + Number(it.subtotal), 0);
-                  return (
-                    <div key={rubroNombre} className="px-5 py-3">
-                      <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-neutral-400">
-                        <span>{rubroNombre}</span>
-                        <span>{moneda(totalRubro)}</span>
-                      </div>
-                      <div className="grid gap-1">
-                        {rubroItems.map((it) => (
-                          <div key={it.id} className="flex items-center justify-between text-sm">
-                            <span className="text-neutral-700">
-                              {it.objeto_especifico}{" "}
-                              <span className="text-xs text-neutral-400">
-                                ({it.cantidad} {it.tipo_unidad} × {moneda(it.costo_unitario)})
-                              </span>
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-negro">{moneda(it.subtotal)}</span>
-                              <form action={eliminarItemPresupuesto.bind(null, proyectoId, it.id)}>
-                                <button className="text-xs text-neutral-300 hover:text-rojo">✕</button>
-                              </form>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[800px] border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-negro text-hueso">
+                      <th className="p-2 text-left font-semibold">Rubro</th>
+                      <th className="p-2 text-left font-semibold">Objeto específico</th>
+                      <th className="p-2 text-right font-semibold">Cantidad</th>
+                      <th className="p-2 text-left font-semibold">Tipo unidad</th>
+                      <th className="p-2 text-right font-semibold">Costo unitario</th>
+                      <th className="p-2 text-right font-semibold">Subtotal</th>
+                      <th className="p-2 text-left font-semibold">Importancia</th>
+                      <th className="p-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {depItems.map((it, i) => (
+                      <tr key={it.id} className={i % 2 === 0 ? "bg-white" : "bg-neutral-50"}>
+                        <td className="border border-neutral-100 p-2">{it.presupuesto_rubros.nombre}</td>
+                        <td className="border border-neutral-100 p-2">{it.objeto_especifico}</td>
+                        <td className="border border-neutral-100 p-2 text-right">{it.cantidad}</td>
+                        <td className="border border-neutral-100 p-2">{it.tipo_unidad}</td>
+                        <td className="border border-neutral-100 p-2 text-right">{moneda(it.costo_unitario)}</td>
+                        <td className="border border-neutral-100 p-2 text-right font-semibold text-negro">
+                          {moneda(it.subtotal)}
+                        </td>
+                        <td className="border border-neutral-100 p-2">
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase ${
+                              it.importancia === "Obligatorio" ? "bg-rojo/15 text-rojo" : "bg-neutral-200 text-neutral-600"
+                            }`}
+                          >
+                            {it.importancia}
+                          </span>
+                        </td>
+                        <td className="border border-neutral-100 p-2">
+                          <form action={eliminarItemPresupuesto.bind(null, proyectoId, it.id)}>
+                            <button className="text-neutral-300 hover:text-rojo">✕</button>
+                          </form>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           );
@@ -218,6 +227,19 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
                   className="w-full rounded border border-neutral-300 px-3 py-2"
                 />
               </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
+                Importancia
+              </label>
+              <select
+                name="importancia"
+                defaultValue="Obligatorio"
+                className="w-full max-w-xs rounded border border-neutral-300 px-3 py-2"
+              >
+                <option value="Obligatorio">Obligatorio</option>
+                <option value="Bien si se toma">Bien si se toma</option>
+              </select>
             </div>
             <button className="mt-2 rounded bg-rojo py-3 font-semibold text-hueso hover:brightness-110">
               + Agregar gasto

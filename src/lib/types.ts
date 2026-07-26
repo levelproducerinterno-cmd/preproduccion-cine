@@ -116,5 +116,6 @@ export type Toma = {
   descripcion: string | null;
   notas: string | null;
   imagen_url: string | null;
+  importancia: "Obligatorio" | "Bien si se toma";
   orden: number;
 };

@@ -31,7 +31,7 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
   const { data: tomasRaw } = await supabase
     .from("tomas")
     .select(
-      "id, escena_id, setup_num, shot_num, subject, shot_size, camara, angulo, movimiento, equipo, lente, sonido, descripcion, notas, imagen_url, orden"
+      "id, escena_id, setup_num, shot_num, subject, shot_size, camara, angulo, movimiento, equipo, lente, sonido, descripcion, notas, imagen_url, importancia, orden"
     )
     .in("escena_id", (escenas ?? []).map((e) => e.id))
     .order("orden");
@@ -70,34 +70,75 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
             </summary>
             <div className="border-t border-neutral-100 p-5">
               <EscenaTexto texto={segmentosGuion[idx] ?? ""} />
-              <div className="grid gap-2">
-                {tomas.map((t) => (
-                  <div key={t.id} className="flex gap-3 rounded border border-neutral-100 bg-neutral-50 p-3">
-                    {t.imagen_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={t.imagen_url} alt="Referencia" className="h-16 w-16 rounded object-cover" />
-                    )}
-                    <div className="flex-1 text-sm">
-                      <div className="font-semibold text-negro">
-                        Setup {t.setup_num ?? "-"} / Shot {t.shot_num ?? "-"} — {t.subject ?? ""}
-                      </div>
-                      <div className="text-xs text-neutral-500">
-                        {[t.shot_size, t.camara, t.angulo, t.movimiento, t.equipo, t.lente, t.sonido]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </div>
-                      {t.descripcion && <div className="mt-1 text-xs text-neutral-600">{t.descripcion}</div>}
-                      {t.notas && <div className="text-xs text-neutral-400">Notas: {t.notas}</div>}
-                    </div>
-                    {puedeEditar && (
-                      <form action={eliminarToma.bind(null, proyectoId, t.id)}>
-                        <button className="text-xs text-neutral-300 hover:text-rojo">✕</button>
-                      </form>
-                    )}
-                  </div>
-                ))}
-                {tomas.length === 0 && <p className="text-sm text-neutral-400">Sin tomas todavía.</p>}
-              </div>
+              {tomas.length > 0 ? (
+                <div className="overflow-x-auto rounded border border-neutral-100">
+                  <table className="w-full min-w-[900px] border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-negro text-hueso">
+                        <th className="p-2 text-left font-semibold">Ref.</th>
+                        <th className="p-2 text-left font-semibold">Setup#</th>
+                        <th className="p-2 text-left font-semibold">Shot#</th>
+                        <th className="p-2 text-left font-semibold">Subject</th>
+                        <th className="p-2 text-left font-semibold">Shot size</th>
+                        <th className="p-2 text-left font-semibold">Cámara</th>
+                        <th className="p-2 text-left font-semibold">Ángulo</th>
+                        <th className="p-2 text-left font-semibold">Movimiento</th>
+                        <th className="p-2 text-left font-semibold">Equipo</th>
+                        <th className="p-2 text-left font-semibold">Lente</th>
+                        <th className="p-2 text-left font-semibold">Sonido</th>
+                        <th className="p-2 text-left font-semibold">Descripción</th>
+                        <th className="p-2 text-left font-semibold">Notas</th>
+                        <th className="p-2 text-left font-semibold">Importancia</th>
+                        {puedeEditar && <th className="p-2"></th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tomas.map((t, i) => (
+                        <tr key={t.id} className={i % 2 === 0 ? "bg-white" : "bg-neutral-50"}>
+                          <td className="border border-neutral-100 p-2">
+                            {t.imagen_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={t.imagen_url} alt="Referencia" className="h-10 w-10 rounded object-cover" />
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td className="border border-neutral-100 p-2">{t.setup_num ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.shot_num ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.subject ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.shot_size ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.camara ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.angulo ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.movimiento ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.equipo ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.lente ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.sonido ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.descripcion ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">{t.notas ?? "-"}</td>
+                          <td className="border border-neutral-100 p-2">
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase ${
+                                t.importancia === "Obligatorio" ? "bg-rojo/15 text-rojo" : "bg-neutral-200 text-neutral-600"
+                              }`}
+                            >
+                              {t.importancia}
+                            </span>
+                          </td>
+                          {puedeEditar && (
+                            <td className="border border-neutral-100 p-2">
+                              <form action={eliminarToma.bind(null, proyectoId, t.id)}>
+                                <button className="text-neutral-300 hover:text-rojo">✕</button>
+                              </form>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-400">Sin tomas todavía.</p>
+              )}
 
               {puedeEditar && <TomaForm proyectoId={proyectoId} escenaId={esc.id} />}
             </div>

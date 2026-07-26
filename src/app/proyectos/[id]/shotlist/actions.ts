@@ -34,6 +34,7 @@ export async function agregarToma(proyectoId: string, escenaId: string, formData
     descripcion: String(formData.get("descripcion") || "") || null,
     notas: String(formData.get("notas") || "") || null,
     imagen_url: String(formData.get("imagen_url") || "") || null,
+    importancia: String(formData.get("importancia") || "Obligatorio"),
     orden: count ?? 0,
     created_by: persona?.id ?? null,
   });
@@ -59,7 +60,7 @@ export async function obtenerShotlistCompleto(proyectoId: string) {
   const { data: tomas } = await supabase
     .from("tomas")
     .select(
-      "id, escena_id, setup_num, shot_num, subject, shot_size, camara, angulo, movimiento, equipo, lente, sonido, descripcion, notas, imagen_url, orden"
+      "id, escena_id, setup_num, shot_num, subject, shot_size, camara, angulo, movimiento, equipo, lente, sonido, descripcion, notas, imagen_url, importancia, orden"
     )
     .in("escena_id", (escenas ?? []).map((e) => e.id))
     .order("orden");

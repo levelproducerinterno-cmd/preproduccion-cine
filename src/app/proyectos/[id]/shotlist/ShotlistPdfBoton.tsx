@@ -20,6 +20,8 @@ export default function ShotlistPdfBoton({
   async function descargar() {
     setCargando(true);
     const { escenas, tomas } = await obtenerShotlistCompleto(proyectoId);
+    const autoTableModule = await import("jspdf-autotable");
+    const autoTable = autoTableModule.default;
 
     const doc = await crearDocumentoConMachote({
       tituloDocumento: "Shotlist",
@@ -28,70 +30,94 @@ export default function ShotlistPdfBoton({
       colorPrimario,
     });
 
-    let y = 42;
+    let y = 40;
+    const columnas = [
+      "Ref.",
+      "Setup#",
+      "Shot#",
+      "Subject",
+      "Shot size",
+      "Cámara",
+      "Ángulo",
+      "Movimiento",
+      "Equipo",
+      "Lente",
+      "Sonido",
+      "Descripción",
+      "Notas",
+      "Importancia",
+    ];
 
     for (const esc of escenas) {
       const tomasEscena = tomas.filter((t) => t.escena_id === esc.id);
-      if (y > 260) {
+      if (y > 270) {
         doc.addPage();
         y = 20;
       }
-      doc.setFontSize(12);
+      doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
       doc.text(
         `Escena ${esc.numero} — ${esc.int_ext ?? "?"}. ${esc.locacion ?? "Sin locación"} - ${esc.momento ?? "?"}`,
         14,
         y
       );
-      y += 8;
+      y += 5;
 
       if (tomasEscena.length === 0) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.text("Sin tomas capturadas.", 14, y);
-        y += 8;
+        doc.text("Sin tomas capturadas.", 14, y + 4);
+        y += 12;
         continue;
       }
 
-      for (const t of tomasEscena) {
-        if (y > 240) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Setup ${t.setup_num ?? "-"} / Shot ${t.shot_num ?? "-"} — ${t.subject ?? ""}`, 18, y);
-        y += 5;
-        doc.setFont("helvetica", "normal");
-        const linea1 = `${t.shot_size ?? ""} · ${t.camara ?? ""} · ${t.angulo ?? ""} · ${t.movimiento ?? ""} · ${t.equipo ?? ""} · ${t.lente ?? ""} · ${t.sonido ?? ""}`;
-        doc.text(doc.splitTextToSize(linea1, 170), 18, y);
-        y += 5;
-        if (t.descripcion) {
-          doc.text(doc.splitTextToSize(`Desc: ${t.descripcion}`, 170), 18, y);
-          y += 5;
-        }
-        if (t.notas) {
-          doc.text(doc.splitTextToSize(`Notas: ${t.notas}`, 170), 18, y);
-          y += 5;
-        }
-        if (t.imagen_url) {
-          const dataUrl = await imagenUrlABase64(t.imagen_url);
-          if (dataUrl) {
-            if (y > 220) {
-              doc.addPage();
-              y = 20;
+      const imagenesDataUrl = await Promise.all(
+        tomasEscena.map((t) => (t.imagen_url ? imagenUrlABase64(t.imagen_url) : Promise.resolve(null)))
+      );
+
+      const filas = tomasEscena.map((t) => [
+        "",
+        t.setup_num ?? "-",
+        t.shot_num ?? "-",
+        t.subject ?? "-",
+        t.shot_size ?? "-",
+        t.camara ?? "-",
+        t.angulo ?? "-",
+        t.movimiento ?? "-",
+        t.equipo ?? "-",
+        t.lente ?? "-",
+        t.sonido ?? "-",
+        t.descripcion ?? "-",
+        t.notas ?? "-",
+        t.importancia,
+      ]);
+
+      autoTable(doc, {
+        startY: y,
+        head: [columnas],
+        body: filas,
+        theme: "grid",
+        styles: { fontSize: 6.5, cellPadding: 1.5, overflow: "linebreak" },
+        headStyles: { fillColor: [10, 9, 8], textColor: 255 },
+        columnStyles: { 0: { cellWidth: 12, minCellHeight: 12 } },
+        margin: { left: 14, right: 14 },
+        didDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 0) {
+            const url = imagenesDataUrl[data.row.index];
+            if (url) {
+              try {
+                doc.addImage(url, data.cell.x + 1, data.cell.y + 1, 9, 9);
+              } catch {
+                // formato no soportado, se omite
+              }
             }
-            try {
-              doc.addImage(dataUrl, "JPEG", 18, y, 40, 30);
-            } catch {
-              // formato no soportado, se omite
-            }
-            y += 34;
           }
-        }
-        y += 3;
-      }
-      y += 4;
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 10;
     }
 
     await finalizarConPiePagina(doc);
