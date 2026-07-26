@@ -1,0 +1,176 @@
+import { getProyectoContext } from "@/lib/proyecto-context";
+import {
+  agregarElemento,
+  actualizarStatusElemento,
+  eliminarElemento,
+  agregarCategoriaCustom,
+} from "./actions";
+import type { DesgloseElemento, Escena, Departamento, DesgloseCategoria } from "@/lib/types";
+
+export default async function EscenasPage(props: { params: Promise<{ id: string }> }) {
+  const { id: proyectoId } = await props.params;
+  const { supabase, esAdOProduccion, miDepartamentos } = await getProyectoContext(proyectoId);
+
+  const { data: escenas } = await supabase
+    .from("escenas")
+    .select("id, proyecto_id, guion_id, numero, int_ext, locacion, momento, orden, dia_rodaje_numero, orden_del_dia")
+    .eq("proyecto_id", proyectoId)
+    .order("orden");
+
+  const { data: categorias } = await supabase
+    .from("desglose_categorias")
+    .select("id, proyecto_id, nombre, es_estandar, orden")
+    .or(`proyecto_id.eq.${proyectoId},proyecto_id.is.null`)
+    .order("orden");
+
+  const { data: departamentos } = await supabase
+    .from("departamentos")
+    .select("id, nombre, orden")
+    .order("orden");
+
+  const { data: elementosRaw } = await supabase
+    .from("desglose_elementos")
+    .select(
+      "id, escena_id, categoria_id, descripcion, notas, departamento_id, status, desglose_categorias(id, nombre), departamentos(id, nombre)"
+    )
+    .in("escena_id", (escenas ?? []).map((e) => e.id));
+
+  const elementosPorEscena = new Map<string, DesgloseElemento[]>();
+  for (const el of (elementosRaw ?? []) as unknown as (DesgloseElemento & { escena_id: string })[]) {
+    const lista = elementosPorEscena.get(el.escena_id) ?? [];
+    lista.push(el);
+    elementosPorEscena.set(el.escena_id, lista);
+  }
+
+  const puedeVerElemento = (el: DesgloseElemento) =>
+    esAdOProduccion || !el.departamento_id || miDepartamentos.includes(el.departamentos?.nombre ?? "");
+  const puedeEditarElemento = (el: DesgloseElemento) =>
+    esAdOProduccion || (el.departamento_id && miDepartamentos.includes(el.departamentos?.nombre ?? ""));
+
+  return (
+    <div className="grid gap-4">
+      {esAdOProduccion && (
+        <details className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+          <summary className="cursor-pointer text-sm font-semibold text-neutral-500">
+            + Agregar categoría de desglose personalizada
+          </summary>
+          <form action={agregarCategoriaCustom.bind(null, proyectoId)} className="mt-3 flex gap-2">
+            <input
+              name="nombre_categoria"
+              placeholder="Ej. Drones, Permisos..."
+              className="flex-1 rounded border border-neutral-300 px-3 py-2"
+            />
+            <button className="rounded bg-neutral-800 px-4 py-2 text-sm font-semibold text-hueso">Agregar</button>
+          </form>
+        </details>
+      )}
+
+      {(escenas ?? []).length === 0 && (
+        <p className="rounded-lg border border-neutral-200 bg-white p-10 text-center text-neutral-500 shadow-sm">
+          Aún no hay escenas. Se crean automáticamente al escribir encabezados de escena en la pestaña Guion.
+        </p>
+      )}
+
+      {(escenas as Escena[] | null)?.map((esc) => {
+        const elementos = (elementosPorEscena.get(esc.id) ?? []).filter(puedeVerElemento);
+        return (
+          <details key={esc.id} className="rounded-lg border border-neutral-200 bg-white shadow-sm" open>
+            <summary className="cursor-pointer px-5 py-4 font-semibold text-negro">
+              Escena {esc.numero} — {esc.int_ext ?? "?"}. {esc.locacion ?? "Sin locación"} - {esc.momento ?? "?"}
+            </summary>
+            <div className="border-t border-neutral-100 p-5">
+              <div className="grid gap-2">
+                {elementos.map((el) => (
+                  <div
+                    key={el.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded border border-neutral-100 bg-neutral-50 px-3 py-2"
+                  >
+                    <div>
+                      <span className="mr-2 rounded bg-neutral-200 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-neutral-600">
+                        {el.desglose_categorias.nombre}
+                      </span>
+                      <span className="text-sm text-negro">{el.descripcion}</span>
+                      {el.notas && <span className="ml-2 text-xs text-neutral-400">({el.notas})</span>}
+                      {el.departamentos && (
+                        <span className="ml-2 text-xs font-semibold text-neutral-400">
+                          → {el.departamentos.nombre}
+                        </span>
+                      )}
+                    </div>
+                    {puedeEditarElemento(el) ? (
+                      <div className="flex items-center gap-2">
+                        <form
+                          action={actualizarStatusElemento.bind(
+                            null,
+                            proyectoId,
+                            el.id,
+                            el.status === "confirmado" ? "pendiente" : "confirmado"
+                          )}
+                        >
+                          <button
+                            className={`rounded px-2 py-1 text-[0.65rem] font-bold uppercase ${
+                              el.status === "confirmado" ? "bg-verde/15 text-verde" : "bg-amarillo/20 text-amarillo"
+                            }`}
+                          >
+                            {el.status === "confirmado" ? "Confirmado" : "Pendiente"}
+                          </button>
+                        </form>
+                        {esAdOProduccion && (
+                          <form action={eliminarElemento.bind(null, proyectoId, el.id)}>
+                            <button className="text-xs text-neutral-300 hover:text-rojo">✕</button>
+                          </form>
+                        )}
+                      </div>
+                    ) : (
+                      <span
+                        className={`rounded px-2 py-1 text-[0.65rem] font-bold uppercase ${
+                          el.status === "confirmado" ? "bg-verde/15 text-verde" : "bg-amarillo/20 text-amarillo"
+                        }`}
+                      >
+                        {el.status === "confirmado" ? "Confirmado" : "Pendiente"}
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {elementos.length === 0 && <p className="text-sm text-neutral-400">Sin desglose todavía.</p>}
+              </div>
+
+              {esAdOProduccion && (
+                <form
+                  action={agregarElemento.bind(null, proyectoId, esc.id)}
+                  className="mt-4 grid grid-cols-2 gap-2 border-t border-neutral-100 pt-4 md:grid-cols-5"
+                >
+                  <select name="categoria_id" required className="rounded border border-neutral-300 px-2 py-2 text-sm">
+                    {(categorias as DesgloseCategoria[] | null)?.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    name="descripcion"
+                    placeholder="Descripción"
+                    required
+                    className="col-span-2 rounded border border-neutral-300 px-2 py-2 text-sm md:col-span-1"
+                  />
+                  <input name="notas" placeholder="Notas" className="rounded border border-neutral-300 px-2 py-2 text-sm" />
+                  <select name="departamento_id" className="rounded border border-neutral-300 px-2 py-2 text-sm">
+                    <option value="">Depto. responsable</option>
+                    {(departamentos as Departamento[] | null)?.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="rounded bg-rojo px-3 py-2 text-sm font-semibold text-hueso hover:brightness-110">
+                    + Agregar
+                  </button>
+                </form>
+              )}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  );
+}
