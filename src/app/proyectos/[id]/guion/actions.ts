@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { IntExt, Momento } from "@/lib/types";
 
-const ENCABEZADO_RE = /^(INT\/EXT|INT|EXT)\.?\s*(.+?)\s*-\s*(D[IÍ]A|NOCHE|AMANECER|ATARDECER)\s*$/i;
+// Acepta tanto "INT. LOCACIÓN - DÍA" (guion) como "EXT. LOCACIÓN. DÍA" (puntos)
+const ENCABEZADO_RE = /^(INT\/EXT|INT|EXT)\.?\s*(.+?)\s*[-.]\s*(D[IÍ]A|NOCHE|AMANECER|ATARDECER)\.?\s*$/i;
 
 function parseEncabezado(linea: string): { int_ext: IntExt | null; locacion: string | null; momento: Momento | null } {
   const m = linea.trim().match(ENCABEZADO_RE);

@@ -44,5 +44,6 @@ export async function getProyectoContext(proyectoId: string) {
     miDepartamentos,
     esAdOProduccion,
     puestoEspecifico: miCrew.puesto_especifico as string | null,
+    miCrewId: miCrew.id as string,
   };
 }
