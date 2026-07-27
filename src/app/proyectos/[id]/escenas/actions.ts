@@ -77,6 +77,78 @@ export async function eliminarElemento(proyectoId: string, elementoId: string) {
   revalidatePath(`/proyectos/${proyectoId}/escenas`);
 }
 
+export async function guardarAplicaPresupuesto(
+  proyectoId: string,
+  elementoId: string,
+  departamentoId: string,
+  formData: FormData
+) {
+  const rubroId = String(formData.get("rubro_id") || "");
+  const cantidad = Number(formData.get("cantidad") || 1);
+  const tipoUnidad = String(formData.get("tipo_unidad") || "Unidad");
+  const costoUnitario = Number(formData.get("costo_unitario") || 0);
+  const importancia = String(formData.get("importancia") || "Obligatorio");
+  if (!rubroId) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: persona } = await supabase
+    .from("personas")
+    .select("id")
+    .eq("auth_user_id", user!.id)
+    .single();
+
+  const { data: elemento } = await supabase
+    .from("desglose_elementos")
+    .select("descripcion")
+    .eq("id", elementoId)
+    .single();
+
+  const { data: existente } = await supabase
+    .from("presupuesto_items")
+    .select("id")
+    .eq("desglose_elemento_id", elementoId)
+    .maybeSingle();
+
+  if (existente) {
+    await supabase
+      .from("presupuesto_items")
+      .update({
+        rubro_id: rubroId,
+        cantidad,
+        tipo_unidad: tipoUnidad,
+        costo_unitario: costoUnitario,
+        importancia,
+      })
+      .eq("id", existente.id);
+  } else {
+    await supabase.from("presupuesto_items").insert({
+      proyecto_id: proyectoId,
+      departamento_id: departamentoId,
+      rubro_id: rubroId,
+      objeto_especifico: elemento?.descripcion ?? "Sin descripción",
+      cantidad,
+      tipo_unidad: tipoUnidad,
+      costo_unitario: costoUnitario,
+      importancia,
+      desglose_elemento_id: elementoId,
+      created_by: persona?.id ?? null,
+    });
+  }
+
+  revalidatePath(`/proyectos/${proyectoId}/escenas`);
+  revalidatePath(`/proyectos/${proyectoId}/presupuesto`);
+}
+
+export async function quitarAplicaPresupuesto(proyectoId: string, elementoId: string) {
+  const supabase = await createClient();
+  await supabase.from("presupuesto_items").delete().eq("desglose_elemento_id", elementoId);
+  revalidatePath(`/proyectos/${proyectoId}/escenas`);
+  revalidatePath(`/proyectos/${proyectoId}/presupuesto`);
+}
+
 export async function agregarCategoriaCustom(proyectoId: string, formData: FormData) {
   const nombre = String(formData.get("nombre_categoria") || "").trim();
   if (!nombre) return;

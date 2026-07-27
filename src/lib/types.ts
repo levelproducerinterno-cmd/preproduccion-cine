@@ -90,6 +90,15 @@ export type DesgloseCategoria = {
   orden: number;
 };
 
+export type PresupuestoItemDeElemento = {
+  id: string;
+  rubro_id: string;
+  cantidad: number;
+  tipo_unidad: string;
+  costo_unitario: number;
+  importancia: "Obligatorio" | "Bien si se toma";
+};
+
 export type DesgloseElemento = {
   id: string;
   escena_id: string;
@@ -100,6 +109,61 @@ export type DesgloseElemento = {
   status: "pendiente" | "confirmado";
   desglose_categorias: DesgloseCategoria;
   departamentos: Departamento | null;
+  presupuesto_items: PresupuestoItemDeElemento[];
+};
+
+export type ImagenSlide = string | null;
+
+export type PresentacionArteDatos = {
+  portada: { nombreDirector: string; imagen: ImagenSlide };
+  emociones: {
+    comoSeSiente: string;
+    aQuienVaDirigido: string;
+    queEmocionTransmite: string;
+    emocionesPredominantes: string;
+  };
+  galeria: ImagenSlide[];
+  descripcion: {
+    emocionesAEvitar: string;
+    recuerdosOSensaciones: string;
+    siFueraPersona: string;
+    colores: string[];
+  };
+  persona: { descripcion: string; imagenIzquierda: ImagenSlide; imagenDerecha: ImagenSlide };
+  palabraEmocion: {
+    texturas: string;
+    objetosFisicos: string;
+    materiales: string;
+  };
+  texturas: { justificacion: string; imagenes: ImagenSlide[] };
+  ambiente: { justificacion: string; imagenes: ImagenSlide[] };
+  objetoClave: { justificacion: string; items: { imagen: ImagenSlide; detalle: string }[] };
+  moodboard: { imagen: ImagenSlide };
+};
+
+export type PersonajeDireccion = {
+  nombre: string;
+  descripcion: string;
+  imagenIzquierda: ImagenSlide;
+  imagenDerecha: ImagenSlide;
+};
+
+export type UbicacionDireccion = {
+  titulo: string;
+  justificacion: string;
+  imagenes: ImagenSlide[];
+};
+
+export type PresentacionDireccionDatos = {
+  portada: { logline: string; imagen: ImagenSlide };
+  peliculasSimilares: { parrafo: string; imagenes: ImagenSlide[] };
+  ubicacionDivisor: { imagen: ImagenSlide };
+  ubicaciones: UbicacionDireccion[];
+  fotografiaDivisor: { imagen: ImagenSlide };
+  fotografia: { parrafo: string; items: { imagen: ImagenSlide; detalle: string }[] };
+  vestuarioDivisor: { imagen: ImagenSlide };
+  personajes: PersonajeDireccion[];
+  galeriaFinal: ImagenSlide[];
 };
 
 export type Toma = {
