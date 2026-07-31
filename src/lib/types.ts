@@ -4,6 +4,66 @@ export type Departamento = {
   orden: number;
 };
 
+export type PresentacionPdf = {
+  id: string;
+  departamento_id: string;
+  archivo_url: string | null;
+  nombre_archivo: string | null;
+};
+
+export type DiaRodaje = {
+  id: string;
+  proyecto_id: string;
+  numero: number;
+  fecha: string | null;
+  llamado_general: string | null;
+  jornada_horas: string | null;
+  ready_to_shoot: string | null;
+  orden: number;
+};
+
+export type PlanRodajeBloque = {
+  id: string;
+  dia_rodaje_id: string;
+  hora: string | null;
+  descripcion: string;
+  orden: number;
+};
+
+export type DiaRodajeLocacion = {
+  id: string;
+  dia_rodaje_id: string;
+  nombre: string;
+  url_maps: string | null;
+  orden: number;
+};
+
+export type DiaRodajeCrewLlamado = {
+  id: string;
+  dia_rodaje_id: string;
+  proyecto_crew_id: string;
+  llamado: string | null;
+  locacion_url: string | null;
+};
+
+export type Talento = {
+  id: string;
+  proyecto_id: string;
+  personaje: string | null;
+  nombre: string;
+  telefono: string | null;
+  orden: number;
+};
+
+export type DiaRodajeTalentoLlamado = {
+  id: string;
+  dia_rodaje_id: string;
+  talento_id: string;
+  llamado_desde: string | null;
+  llamado_hasta: string | null;
+  locacion_url: string | null;
+};
+
 export type Persona = {
   id: string;
   auth_user_id: string | null;
@@ -184,4 +244,9 @@ export type Toma = {
   imagen_url: string | null;
   importancia: "Obligatorio" | "Bien si se toma";
   orden: number;
+  hora_inicio: string | null;
+  tiempo_estimado: string | null;
+  talento_en_toma: string | null;
+  set_especifico: string | null;
+  notas_arte: string | null;
 };
