@@ -71,6 +71,7 @@ export type Persona = {
   email: string;
   telefono: string | null;
   color: string;
+  ical_token: string;
 };
 
 export type Proyecto = {

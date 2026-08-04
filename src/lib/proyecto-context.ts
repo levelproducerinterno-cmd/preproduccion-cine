@@ -10,7 +10,7 @@ export async function getProyectoContext(proyectoId: string) {
 
   const { data: persona } = await supabase
     .from("personas")
-    .select("id, nombre, email, color")
+    .select("id, nombre, email, color, ical_token")
     .eq("auth_user_id", user!.id)
     .single();
   if (!persona) redirect("/login");

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 export async function agregarHito(proyectoId: string, formData: FormData) {
   const nombre = String(formData.get("nombre") || "").trim();
   const departamentoId = String(formData.get("departamento_id") || "") || null;
+  const personaId = String(formData.get("persona_id") || "") || null;
   const fechaLimite = String(formData.get("fecha_limite") || "") || null;
   const notas = String(formData.get("notas") || "").trim() || null;
   if (!nombre) return;
@@ -24,6 +25,7 @@ export async function agregarHito(proyectoId: string, formData: FormData) {
     proyecto_id: proyectoId,
     nombre,
     departamento_id: departamentoId,
+    persona_id: personaId,
     fecha_limite: fechaLimite,
     notas,
     created_by: persona?.id ?? null,

@@ -1,6 +1,7 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
 import { agregarHito, actualizarStatusHito, eliminarHito } from "./actions";
 import type { Departamento } from "@/lib/types";
+import CopiarLinkCalendario from "./CopiarLinkCalendario";
 
 const STATUS_LABEL: Record<string, string> = {
   pendiente: "Pendiente",
@@ -18,19 +19,23 @@ type Hito = {
   id: string;
   nombre: string;
   departamento_id: string | null;
+  persona_id: string | null;
   fecha_limite: string | null;
   status: "pendiente" | "en_progreso" | "completado";
   notas: string | null;
   departamentos: { nombre: string } | null;
+  personas: { nombre: string } | null;
 };
+
+type CrewParaAsignar = { id: string; personas: { id: string; nombre: string } };
 
 export default async function CalendarioPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
-  const { supabase, esAdOProduccion } = await getProyectoContext(proyectoId);
+  const { supabase, esAdOProduccion, persona } = await getProyectoContext(proyectoId);
 
   const { data: hitosRaw } = await supabase
     .from("hitos_preproduccion")
-    .select("id, nombre, departamento_id, fecha_limite, status, notas, departamentos(nombre)")
+    .select("id, nombre, departamento_id, persona_id, fecha_limite, status, notas, departamentos(nombre), personas(nombre)")
     .eq("proyecto_id", proyectoId)
     .order("fecha_limite", { ascending: true, nullsFirst: false });
 
@@ -41,8 +46,14 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
     ? await supabase.from("departamentos").select("id, nombre, orden").order("orden")
     : { data: null };
 
+  const { data: crewParaAsignar } = esAdOProduccion
+    ? await supabase.from("proyecto_crew").select("id, personas(id, nombre)").eq("proyecto_id", proyectoId)
+    : { data: null };
+
   return (
     <div className="grid gap-8">
+      <CopiarLinkCalendario icalToken={persona.ical_token} />
+
       <section>
         <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
           Calendario de preproducción ({hitos.length})
@@ -63,6 +74,11 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
                     {h.departamentos && (
                       <span className="rounded bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-600">
                         {h.departamentos.nombre}
+                      </span>
+                    )}
+                    {h.personas && (
+                      <span className="rounded bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-600">
+                        → {h.personas.nombre}
                       </span>
                     )}
                     {h.fecha_limite && (
@@ -124,7 +140,7 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
               </label>
               <input name="nombre" required className="w-full rounded border border-neutral-300 px-3 py-2" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
                   Departamento
@@ -134,6 +150,19 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
                   {(departamentos as Departamento[] | null)?.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
+                  Persona (opcional)
+                </label>
+                <select name="persona_id" className="w-full rounded border border-neutral-300 px-3 py-2">
+                  <option value="">— Nadie en particular —</option>
+                  {(crewParaAsignar as CrewParaAsignar[] | null)?.map((c) => (
+                    <option key={c.id} value={c.personas.id}>
+                      {c.personas.nombre}
                     </option>
                   ))}
                 </select>
