@@ -1,19 +1,8 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
-import { agregarHito, actualizarStatusHito, eliminarHito } from "./actions";
+import { agregarHito, eliminarHito } from "./actions";
 import type { Departamento } from "@/lib/types";
 import CopiarLinkCalendario from "./CopiarLinkCalendario";
-
-const STATUS_LABEL: Record<string, string> = {
-  pendiente: "Pendiente",
-  en_progreso: "En progreso",
-  completado: "Completado",
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  pendiente: "bg-amarillo/20 text-amarillo",
-  en_progreso: "bg-neutral-200 text-neutral-700",
-  completado: "bg-verde/15 text-verde",
-};
+import PorcentajeHito from "./PorcentajeHito";
 
 type Hito = {
   id: string;
@@ -22,6 +11,7 @@ type Hito = {
   persona_id: string | null;
   fecha_limite: string | null;
   status: "pendiente" | "en_progreso" | "completado";
+  porcentaje: number;
   notas: string | null;
   departamentos: { nombre: string } | null;
   personas: { nombre: string } | null;
@@ -35,7 +25,9 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
 
   const { data: hitosRaw } = await supabase
     .from("hitos_preproduccion")
-    .select("id, nombre, departamento_id, persona_id, fecha_limite, status, notas, departamentos(nombre), personas(nombre)")
+    .select(
+      "id, nombre, departamento_id, persona_id, fecha_limite, status, porcentaje, notas, departamentos(nombre), personas!persona_id(nombre)"
+    )
     .eq("proyecto_id", proyectoId)
     .order("fecha_limite", { ascending: true, nullsFirst: false });
 
@@ -91,31 +83,18 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {esAdOProduccion ? (
-                    <div className="flex gap-1">
-                      {(["pendiente", "en_progreso", "completado"] as const).map((s) => (
-                        <form key={s} action={actualizarStatusHito.bind(null, proyectoId, h.id, s)}>
-                          <button
-                            className={`rounded border px-2 py-1 text-[0.65rem] font-semibold uppercase ${
-                              h.status === s
-                                ? "border-negro bg-negro text-hueso"
-                                : "border-neutral-300 text-neutral-500 hover:border-negro"
-                            }`}
-                          >
-                            {STATUS_LABEL[s]}
-                          </button>
-                        </form>
-                      ))}
-                      <form action={eliminarHito.bind(null, proyectoId, h.id)}>
-                        <button className="rounded border border-neutral-300 px-2 py-1 text-[0.65rem] font-semibold text-neutral-400 hover:border-rojo hover:text-rojo">
-                          Quitar
-                        </button>
-                      </form>
-                    </div>
-                  ) : (
-                    <span className={`rounded px-2 py-1 text-xs font-bold uppercase ${STATUS_COLOR[h.status]}`}>
-                      {STATUS_LABEL[h.status]}
-                    </span>
+                  <PorcentajeHito
+                    proyectoId={proyectoId}
+                    hitoId={h.id}
+                    porcentajeInicial={h.porcentaje}
+                    editable={esAdOProduccion}
+                  />
+                  {esAdOProduccion && (
+                    <form action={eliminarHito.bind(null, proyectoId, h.id)}>
+                      <button className="rounded border border-neutral-300 px-2 py-1 text-[0.65rem] font-semibold text-neutral-400 hover:border-rojo hover:text-rojo">
+                        Quitar
+                      </button>
+                    </form>
                   )}
                 </div>
               </div>

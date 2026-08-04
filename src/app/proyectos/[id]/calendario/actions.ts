@@ -44,6 +44,14 @@ export async function actualizarStatusHito(
   revalidatePath(`/proyectos/${proyectoId}/calendario`);
 }
 
+export async function actualizarPorcentajeHito(proyectoId: string, hitoId: string, porcentaje: number) {
+  const limpio = Math.max(0, Math.min(100, Math.round(porcentaje) || 0));
+  const status = limpio >= 100 ? "completado" : limpio > 0 ? "en_progreso" : "pendiente";
+  const supabase = await createClient();
+  await supabase.from("hitos_preproduccion").update({ porcentaje: limpio, status }).eq("id", hitoId);
+  revalidatePath(`/proyectos/${proyectoId}/calendario`);
+}
+
 export async function eliminarHito(proyectoId: string, hitoId: string) {
   const supabase = await createClient();
   await supabase.from("hitos_preproduccion").delete().eq("id", hitoId);
