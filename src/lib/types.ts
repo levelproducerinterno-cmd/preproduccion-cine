@@ -158,6 +158,8 @@ export type PresupuestoItemDeElemento = {
   tipo_unidad: string;
   costo_unitario: number;
   importancia: "Obligatorio" | "Bien si se toma";
+  es_prestado: boolean;
+  prestado_de: string | null;
 };
 
 export type DesgloseElemento = {
@@ -250,4 +252,7 @@ export type Toma = {
   talento_en_toma: string | null;
   set_especifico: string | null;
   notas_arte: string | null;
+  orden_plan_rodaje: number | null;
 };
+
+export type ArteDeEscena = { id: string; descripcion: string };

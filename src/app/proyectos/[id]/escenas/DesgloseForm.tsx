@@ -20,6 +20,7 @@ export default function DesgloseForm({
   rubros: Rubro[];
 }) {
   const [aplicaPresupuesto, setAplicaPresupuesto] = useState(false);
+  const [esPrestado, setEsPrestado] = useState(false);
 
   return (
     <form
@@ -95,7 +96,8 @@ export default function DesgloseForm({
             step="0.01"
             defaultValue={0}
             placeholder="Costo unitario"
-            className="rounded border border-neutral-300 px-2 py-2 text-sm"
+            disabled={esPrestado}
+            className="rounded border border-neutral-300 px-2 py-2 text-sm disabled:bg-neutral-100 disabled:text-neutral-400"
           />
           <select
             name="presupuesto_importancia"
@@ -105,6 +107,24 @@ export default function DesgloseForm({
             <option value="Obligatorio">Obligatorio</option>
             <option value="Bien si se toma">Bien si se toma</option>
           </select>
+
+          <label className="col-span-2 flex items-center gap-2 text-[0.7rem] font-semibold text-neutral-500 md:col-span-4">
+            <input
+              type="checkbox"
+              name="presupuesto_es_prestado"
+              checked={esPrestado}
+              onChange={(e) => setEsPrestado(e.target.checked)}
+            />
+            Prestado (no se compra, alguien lo presta)
+          </label>
+          {esPrestado && (
+            <input
+              name="presupuesto_prestado_de"
+              placeholder="¿Quién lo presta?"
+              className="col-span-2 rounded border border-neutral-300 px-2 py-2 text-sm md:col-span-4"
+            />
+          )}
+
           <p className="col-span-2 text-[0.7rem] text-neutral-400 md:col-span-3">
             El departamento del gasto es el mismo que elegiste arriba como "Depto. responsable".
           </p>

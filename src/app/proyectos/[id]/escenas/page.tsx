@@ -45,7 +45,7 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
   const { data: elementosRaw } = await supabase
     .from("desglose_elementos")
     .select(
-      "id, escena_id, categoria_id, descripcion, notas, departamento_id, status, desglose_categorias(id, nombre), departamentos(id, nombre), presupuesto_items(id, rubro_id, cantidad, tipo_unidad, costo_unitario, importancia)"
+      "id, escena_id, categoria_id, descripcion, notas, departamento_id, status, desglose_categorias(id, nombre), departamentos(id, nombre), presupuesto_items(id, rubro_id, cantidad, tipo_unidad, costo_unitario, importancia, es_prestado, prestado_de)"
     )
     .in("escena_id", (escenas ?? []).map((e) => e.id));
 

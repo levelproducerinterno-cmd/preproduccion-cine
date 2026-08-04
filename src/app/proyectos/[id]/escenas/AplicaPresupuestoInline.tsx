@@ -18,6 +18,7 @@ export default function AplicaPresupuestoInline({
   itemExistente: PresupuestoItemDeElemento | null;
 }) {
   const [aplica, setAplica] = useState(!!itemExistente);
+  const [esPrestado, setEsPrestado] = useState(itemExistente?.es_prestado ?? false);
   const [pendiente, startTransition] = useTransition();
 
   function onToggle(checked: boolean) {
@@ -89,7 +90,8 @@ export default function AplicaPresupuestoInline({
             step="0.01"
             defaultValue={itemExistente?.costo_unitario ?? 0}
             placeholder="Costo unitario"
-            className="rounded border border-neutral-300 px-2 py-1.5 text-xs"
+            disabled={esPrestado}
+            className="rounded border border-neutral-300 px-2 py-1.5 text-xs disabled:bg-neutral-100 disabled:text-neutral-400"
           />
           <select
             name="importancia"
@@ -99,6 +101,25 @@ export default function AplicaPresupuestoInline({
             <option value="Obligatorio">Obligatorio</option>
             <option value="Bien si se toma">Bien si se toma</option>
           </select>
+
+          <label className="col-span-2 flex items-center gap-2 text-[0.7rem] font-semibold text-neutral-500 md:col-span-5">
+            <input
+              type="checkbox"
+              name="es_prestado"
+              checked={esPrestado}
+              onChange={(e) => setEsPrestado(e.target.checked)}
+            />
+            Prestado (no se compra, alguien lo presta)
+          </label>
+          {esPrestado && (
+            <input
+              name="prestado_de"
+              defaultValue={itemExistente?.prestado_de ?? ""}
+              placeholder="¿Quién lo presta?"
+              className="col-span-2 rounded border border-neutral-300 px-2 py-1.5 text-xs md:col-span-5"
+            />
+          )}
+
           <button
             disabled={pendiente}
             className="col-span-2 rounded bg-rojo px-3 py-1.5 text-xs font-semibold text-hueso hover:brightness-110 disabled:opacity-50 md:col-span-5"

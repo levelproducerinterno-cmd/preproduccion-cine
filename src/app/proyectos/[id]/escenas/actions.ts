@@ -38,8 +38,10 @@ export async function agregarElemento(proyectoId: string, escenaId: string, form
     const rubroId = String(formData.get("presupuesto_rubro_id") || "");
     const cantidad = Number(formData.get("presupuesto_cantidad") || 1);
     const tipoUnidad = String(formData.get("presupuesto_tipo_unidad") || "Unidad");
-    const costoUnitario = Number(formData.get("presupuesto_costo_unitario") || 0);
+    const esPrestado = formData.get("presupuesto_es_prestado") === "on";
+    const costoUnitario = esPrestado ? 0 : Number(formData.get("presupuesto_costo_unitario") || 0);
     const importancia = String(formData.get("presupuesto_importancia") || "Obligatorio");
+    const prestadoDe = esPrestado ? String(formData.get("presupuesto_prestado_de") || "").trim() || null : null;
 
     if (rubroId) {
       await supabase.from("presupuesto_items").insert({
@@ -51,6 +53,8 @@ export async function agregarElemento(proyectoId: string, escenaId: string, form
         tipo_unidad: tipoUnidad,
         costo_unitario: costoUnitario,
         importancia,
+        es_prestado: esPrestado,
+        prestado_de: prestadoDe,
         desglose_elemento_id: elemento.id,
         created_by: persona?.id ?? null,
       });
@@ -86,8 +90,10 @@ export async function guardarAplicaPresupuesto(
   const rubroId = String(formData.get("rubro_id") || "");
   const cantidad = Number(formData.get("cantidad") || 1);
   const tipoUnidad = String(formData.get("tipo_unidad") || "Unidad");
-  const costoUnitario = Number(formData.get("costo_unitario") || 0);
+  const esPrestado = formData.get("es_prestado") === "on";
+  const costoUnitario = esPrestado ? 0 : Number(formData.get("costo_unitario") || 0);
   const importancia = String(formData.get("importancia") || "Obligatorio");
+  const prestadoDe = esPrestado ? String(formData.get("prestado_de") || "").trim() || null : null;
   if (!rubroId) return;
 
   const supabase = await createClient();
@@ -121,6 +127,8 @@ export async function guardarAplicaPresupuesto(
         tipo_unidad: tipoUnidad,
         costo_unitario: costoUnitario,
         importancia,
+        es_prestado: esPrestado,
+        prestado_de: prestadoDe,
       })
       .eq("id", existente.id);
   } else {
@@ -133,6 +141,8 @@ export async function guardarAplicaPresupuesto(
       tipo_unidad: tipoUnidad,
       costo_unitario: costoUnitario,
       importancia,
+      es_prestado: esPrestado,
+      prestado_de: prestadoDe,
       desglose_elemento_id: elementoId,
       created_by: persona?.id ?? null,
     });

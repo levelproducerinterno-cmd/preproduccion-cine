@@ -13,6 +13,8 @@ type Item = {
   costo_unitario: number;
   subtotal: number;
   importancia: "Obligatorio" | "Bien si se toma";
+  es_prestado: boolean;
+  prestado_de: string | null;
   departamentos: { nombre: string };
   presupuesto_rubros: { nombre: string };
 };
@@ -42,7 +44,7 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
   const { data: itemsRaw } = await supabase
     .from("presupuesto_items")
     .select(
-      "id, departamento_id, rubro_id, objeto_especifico, cantidad, tipo_unidad, costo_unitario, subtotal, importancia, departamentos(nombre), presupuesto_rubros(nombre)"
+      "id, departamento_id, rubro_id, objeto_especifico, cantidad, tipo_unidad, costo_unitario, subtotal, importancia, es_prestado, prestado_de, departamentos(nombre), presupuesto_rubros(nombre)"
     )
     .eq("proyecto_id", proyectoId)
     .order("created_at", { ascending: false });
@@ -92,7 +94,14 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
                     {depItems.map((it, i) => (
                       <tr key={it.id} className={i % 2 === 0 ? "bg-white" : "bg-neutral-50"}>
                         <td className="border border-neutral-100 p-2">{it.presupuesto_rubros.nombre}</td>
-                        <td className="border border-neutral-100 p-2">{it.objeto_especifico}</td>
+                        <td className="border border-neutral-100 p-2">
+                          {it.objeto_especifico}
+                          {it.es_prestado && (
+                            <span className="ml-2 rounded bg-neutral-200 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-neutral-600">
+                              Prestado{it.prestado_de ? ` de: ${it.prestado_de}` : ""}
+                            </span>
+                          )}
+                        </td>
                         <td className="border border-neutral-100 p-2 text-right">{it.cantidad}</td>
                         <td className="border border-neutral-100 p-2">{it.tipo_unidad}</td>
                         <td className="border border-neutral-100 p-2 text-right">{moneda(it.costo_unitario)}</td>

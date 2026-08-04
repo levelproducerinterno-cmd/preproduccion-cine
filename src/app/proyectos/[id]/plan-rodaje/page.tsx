@@ -8,6 +8,7 @@ import type {
   DiaRodajeCrewLlamado,
   Talento,
   DiaRodajeTalentoLlamado,
+  ArteDeEscena,
 } from "@/lib/types";
 import PlanRodajeView, { type RenglonPlan, type CrewParaLlamado } from "./PlanRodajeView";
 
@@ -17,6 +18,7 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
 
   const puedeEditarTomas =
     esAdOProduccion || miDepartamentos.includes("Fotografía") || miDepartamentos.includes("Gaffer");
+  const puedeEditarArte = esAdOProduccion || miDepartamentos.includes("Arte");
 
   const { data: diasRaw } = await supabase
     .from("dias_rodaje")
@@ -35,11 +37,30 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
   const { data: tomasRaw } = await supabase
     .from("tomas")
     .select(
-      "id, escena_id, setup_num, shot_num, subject, shot_size, camara, angulo, movimiento, equipo, lente, sonido, descripcion, notas, imagen_url, importancia, orden, hora_inicio, tiempo_estimado, talento_en_toma, set_especifico, notas_arte"
+      "id, escena_id, setup_num, shot_num, subject, shot_size, camara, angulo, movimiento, equipo, lente, sonido, descripcion, notas, imagen_url, importancia, orden, hora_inicio, tiempo_estimado, talento_en_toma, set_especifico, notas_arte, orden_plan_rodaje"
     )
     .in("escena_id", escenas.map((e) => e.id))
     .order("orden");
   const tomas = (tomasRaw ?? []) as Toma[];
+
+  const { data: arteRaw } = await supabase
+    .from("desglose_elementos")
+    .select("id, escena_id, descripcion, departamentos!inner(nombre)")
+    .in("escena_id", escenas.map((e) => e.id))
+    .eq("departamentos.nombre", "Arte");
+  const arteItemsPorEscena: Record<string, ArteDeEscena[]> = {};
+  for (const item of (arteRaw ?? []) as unknown as { id: string; escena_id: string; descripcion: string }[]) {
+    (arteItemsPorEscena[item.escena_id] ??= []).push({ id: item.id, descripcion: item.descripcion });
+  }
+
+  const { data: excluidosRaw } = await supabase
+    .from("toma_arte_excluidos")
+    .select("toma_id, desglose_elemento_id")
+    .in("toma_id", tomas.map((t) => t.id));
+  const excluidosPorToma: Record<string, string[]> = {};
+  for (const ex of (excluidosRaw ?? []) as { toma_id: string; desglose_elemento_id: string }[]) {
+    (excluidosPorToma[ex.toma_id] ??= []).push(ex.desglose_elemento_id);
+  }
 
   const diaIds = dias.map((d) => d.id);
 
@@ -107,7 +128,14 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
     for (const esc of escenasDelDia) {
       const tomasDeEscena = tomasPorEscena.get(esc.id) ?? [];
       for (const t of tomasDeEscena) {
-        renglones.push({ tipo: "toma", id: t.id, clave: (esc.orden_del_dia ?? 0) * 1000 + t.orden, toma: t, escena: esc });
+        const claveDerivada = (esc.orden_del_dia ?? 0) * 1000 + t.orden;
+        renglones.push({
+          tipo: "toma",
+          id: t.id,
+          clave: t.orden_plan_rodaje ?? claveDerivada,
+          toma: t,
+          escena: esc,
+        });
       }
     }
     renglones.sort((a, b) => a.clave - b.clave);
@@ -124,10 +152,13 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
       colorPrimario={proyecto.color_primario}
       esAdOProduccion={esAdOProduccion}
       puedeEditarTomas={puedeEditarTomas}
+      puedeEditarArte={puedeEditarArte}
       dias={dias}
       escenas={escenas}
       escenasSinAsignar={escenasSinAsignar}
       renglonesPorDia={Object.fromEntries(renglonesPorDia)}
+      arteItemsPorEscena={arteItemsPorEscena}
+      excluidosPorToma={excluidosPorToma}
       locaciones={locaciones}
       crew={crew}
       crewLlamados={crewLlamados}

@@ -111,6 +111,37 @@ export async function eliminarBloque(proyectoId: string, bloqueId: string) {
   revalidatePath(ruta(proyectoId));
 }
 
+export async function reordenarRenglones(
+  proyectoId: string,
+  cambios: { tipo: "bloque" | "toma"; id: string; orden: number }[]
+) {
+  const supabase = await createClient();
+  await Promise.all(
+    cambios.map((c) =>
+      c.tipo === "bloque"
+        ? supabase.from("plan_rodaje_bloques").update({ orden: c.orden }).eq("id", c.id)
+        : supabase.from("tomas").update({ orden_plan_rodaje: c.orden }).eq("id", c.id)
+    )
+  );
+  revalidatePath(ruta(proyectoId));
+}
+
+export async function excluirArteDeToma(proyectoId: string, tomaId: string, elementoId: string) {
+  const supabase = await createClient();
+  await supabase.from("toma_arte_excluidos").insert({ toma_id: tomaId, desglose_elemento_id: elementoId });
+  revalidatePath(ruta(proyectoId));
+}
+
+export async function incluirArteEnToma(proyectoId: string, tomaId: string, elementoId: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("toma_arte_excluidos")
+    .delete()
+    .eq("toma_id", tomaId)
+    .eq("desglose_elemento_id", elementoId);
+  revalidatePath(ruta(proyectoId));
+}
+
 export async function agregarLocacion(proyectoId: string, diaRodajeId: string, formData: FormData) {
   const nombre = String(formData.get("nombre") || "").trim();
   if (!nombre) return;

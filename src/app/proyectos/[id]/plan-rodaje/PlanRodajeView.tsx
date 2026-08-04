@@ -1,7 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import type { DiaRodaje, Escena, Toma, DiaRodajeLocacion, DiaRodajeCrewLlamado, Talento, DiaRodajeTalentoLlamado } from "@/lib/types";
+import { useEffect, useState, useTransition } from "react";
+import type {
+  DiaRodaje,
+  Escena,
+  Toma,
+  DiaRodajeLocacion,
+  DiaRodajeCrewLlamado,
+  Talento,
+  DiaRodajeTalentoLlamado,
+  ArteDeEscena,
+} from "@/lib/types";
 import {
   crearDiaRodaje,
   eliminarDiaRodaje,
@@ -11,6 +20,7 @@ import {
   agregarBloque,
   actualizarBloque,
   eliminarBloque,
+  reordenarRenglones,
   agregarLocacion,
   eliminarLocacion,
   actualizarLlamadoCrew,
@@ -19,6 +29,7 @@ import {
   actualizarLlamadoTalento,
 } from "./actions";
 import CeldaEditable from "./CeldaEditable";
+import ArteDeToma from "./ArteDeToma";
 import PlanRodajePdfBoton from "./PlanRodajePdfBoton";
 import HojaLlamadoPdfBoton from "./HojaLlamadoPdfBoton";
 
@@ -42,10 +53,13 @@ export default function PlanRodajeView({
   colorPrimario,
   esAdOProduccion,
   puedeEditarTomas,
+  puedeEditarArte,
   dias,
   escenas,
   escenasSinAsignar,
   renglonesPorDia,
+  arteItemsPorEscena,
+  excluidosPorToma,
   locaciones,
   crew,
   crewLlamados,
@@ -58,10 +72,13 @@ export default function PlanRodajeView({
   colorPrimario: string;
   esAdOProduccion: boolean;
   puedeEditarTomas: boolean;
+  puedeEditarArte: boolean;
   dias: DiaRodaje[];
   escenas: Escena[];
   escenasSinAsignar: Escena[];
   renglonesPorDia: Record<string, RenglonPlan[]>;
+  arteItemsPorEscena: Record<string, ArteDeEscena[]>;
+  excluidosPorToma: Record<string, string[]>;
   locaciones: DiaRodajeLocacion[];
   crew: CrewParaLlamado[];
   crewLlamados: DiaRodajeCrewLlamado[];
@@ -207,6 +224,11 @@ export default function PlanRodajeView({
             renglones={renglonesPorDia[dia.id] ?? []}
             esAdOProduccion={esAdOProduccion}
             puedeEditarTomas={puedeEditarTomas}
+            puedeEditarArte={puedeEditarArte}
+            arteItemsPorEscena={arteItemsPorEscena}
+            excluidosPorToma={excluidosPorToma}
+            crew={crew}
+            crewLlamados={crewLlamados.filter((c) => c.dia_rodaje_id === dia.id)}
           />
         ) : (
           <DiaHojaLlamado
@@ -259,18 +281,50 @@ function DiaPlanRodaje({
   renglones,
   esAdOProduccion,
   puedeEditarTomas,
+  puedeEditarArte,
+  arteItemsPorEscena,
+  excluidosPorToma,
+  crew,
+  crewLlamados,
 }: {
   proyectoId: string;
   dia: DiaRodaje;
   renglones: RenglonPlan[];
   esAdOProduccion: boolean;
   puedeEditarTomas: boolean;
+  puedeEditarArte: boolean;
+  arteItemsPorEscena: Record<string, ArteDeEscena[]>;
+  excluidosPorToma: Record<string, string[]>;
+  crew: CrewParaLlamado[];
+  crewLlamados: DiaRodajeCrewLlamado[];
 }) {
   const [, startTransition] = useTransition();
+  const [filas, setFilas] = useState(renglones);
+  const [arrastrando, setArrastrando] = useState<number | null>(null);
+  const puedeReordenar = puedeEditarTomas;
+
+  useEffect(() => setFilas(renglones), [renglones]);
+
   const editarDia = (campo: string) => (valor: string) =>
     startTransition(() => actualizarDiaRodaje(proyectoId, dia.id, campo, valor));
   const editarToma = (tomaId: string, campo: string) => (valor: string) =>
     startTransition(() => actualizarCampoToma(proyectoId, tomaId, campo, valor));
+  const llamadoPorCrew = new Map(crewLlamados.map((c) => [c.proyecto_crew_id, c]));
+
+  function onDrop(indiceDestino: number) {
+    if (arrastrando === null || arrastrando === indiceDestino) return;
+    const nuevas = [...filas];
+    const [movida] = nuevas.splice(arrastrando, 1);
+    nuevas.splice(indiceDestino, 0, movida);
+    setFilas(nuevas);
+    setArrastrando(null);
+    startTransition(() => {
+      reordenarRenglones(
+        proyectoId,
+        nuevas.map((r, i) => ({ tipo: r.tipo, id: r.id, orden: i }))
+      );
+    });
+  }
 
   return (
     <details open className="rounded-lg border border-neutral-200 bg-white shadow-sm">
@@ -311,10 +365,42 @@ function DiaPlanRodaje({
           </p>
         )}
 
+        {crew.length > 0 && (
+          <details className="mb-4">
+            <summary className="cursor-pointer text-xs font-semibold text-neutral-400">
+              Crew de este día ({crew.length})
+            </summary>
+            <div className="mt-2 overflow-x-auto rounded border border-neutral-100">
+              <table className="w-full min-w-[500px] border-collapse text-xs">
+                <thead>
+                  <tr>
+                    <th className={th}>Puesto</th>
+                    <th className={th}>Nombre</th>
+                    <th className={th}>Llamado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crew.map((c) => (
+                    <tr key={c.id}>
+                      <td className={td}>{c.puesto_especifico || "-"}</td>
+                      <td className={td}>{c.personas.nombre}</td>
+                      <td className={td}>{llamadoPorCrew.get(c.id)?.llamado || dia.llamado_general || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        )}
+
+        {puedeReordenar && filas.length > 1 && (
+          <p className="mb-1 text-[0.65rem] text-neutral-400">Arrastra ⠿ para cambiar el orden de rodaje.</p>
+        )}
         <div className="overflow-x-auto rounded border border-neutral-100">
-          <table className="w-full min-w-[1100px] border-collapse text-xs">
+          <table className="w-full min-w-[1150px] border-collapse text-xs">
             <thead>
               <tr>
+                {puedeReordenar && <th className={th}></th>}
                 <th className={th}>Hora</th>
                 <th className={th}>Tiempo</th>
                 <th className={th}>Plano</th>
@@ -328,9 +414,17 @@ function DiaPlanRodaje({
               </tr>
             </thead>
             <tbody>
-              {renglones.map((r) =>
+              {filas.map((r, indice) =>
                 r.tipo === "bloque" ? (
-                  <tr key={r.id} className="bg-neutral-200">
+                  <tr
+                    key={r.id}
+                    className={`bg-neutral-200 ${arrastrando === indice ? "opacity-40" : ""}`}
+                    draggable={puedeReordenar}
+                    onDragStart={() => setArrastrando(indice)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => onDrop(indice)}
+                  >
+                    {puedeReordenar && <td className={`${td} cursor-grab text-center text-neutral-400`}>⠿</td>}
                     <td className={`${td} font-bold`}>
                       {esAdOProduccion ? (
                         <CeldaEditable
@@ -353,7 +447,15 @@ function DiaPlanRodaje({
                     )}
                   </tr>
                 ) : (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    className={arrastrando === indice ? "opacity-40" : ""}
+                    draggable={puedeReordenar}
+                    onDragStart={() => setArrastrando(indice)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => onDrop(indice)}
+                  >
+                    {puedeReordenar && <td className={`${td} cursor-grab text-center text-neutral-400`}>⠿</td>}
                     <td className={td}>
                       {puedeEditarTomas ? (
                         <CeldaEditable valorInicial={r.toma.hora_inicio ?? ""} onGuardar={editarToma(r.toma.id, "hora_inicio")} />
@@ -386,20 +488,23 @@ function DiaPlanRodaje({
                       )}
                     </td>
                     <td className={td}>{r.escena.locacion ?? "-"}</td>
-                    <td className={td}>
-                      {puedeEditarTomas ? (
-                        <CeldaEditable valorInicial={r.toma.notas_arte ?? ""} onGuardar={editarToma(r.toma.id, "notas_arte")} />
-                      ) : (
-                        r.toma.notas_arte
-                      )}
+                    <td className={`${td} min-w-[10rem]`}>
+                      <ArteDeToma
+                        proyectoId={proyectoId}
+                        tomaId={r.toma.id}
+                        itemsDeEscena={arteItemsPorEscena[r.escena.id] ?? []}
+                        excluidos={excluidosPorToma[r.toma.id] ?? []}
+                        notasArte={r.toma.notas_arte}
+                        puedeEditar={puedeEditarArte}
+                      />
                     </td>
                     {esAdOProduccion && <td className={td}></td>}
                   </tr>
                 )
               )}
-              {renglones.length === 0 && (
+              {filas.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="p-4 text-center text-neutral-400">
+                  <td colSpan={11} className="p-4 text-center text-neutral-400">
                     Sin escenas ni bloques asignados a este día todavía.
                   </td>
                 </tr>
@@ -420,7 +525,7 @@ function DiaPlanRodaje({
                 name="orden"
                 type="number"
                 placeholder="Orden"
-                defaultValue={(renglones[renglones.length - 1]?.clave ?? 0) + 1}
+                defaultValue={(filas[filas.length - 1]?.clave ?? 0) + 1}
                 className="w-24 rounded border border-neutral-300 px-2 py-1.5 text-xs"
               />
               <button className="rounded bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-hueso">+ Agregar</button>
