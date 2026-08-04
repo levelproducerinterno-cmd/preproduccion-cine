@@ -1,10 +1,11 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
-import { actualizarStatusElemento, eliminarElemento, agregarCategoriaCustom } from "./actions";
+import { agregarCategoriaCustom } from "./actions";
 import type { DesgloseElemento, Escena, Departamento, DesgloseCategoria } from "@/lib/types";
 import { extraerSegmentosPorEscena } from "@/lib/guion-parse";
 import EscenaTexto from "@/components/EscenaTexto";
 import DesgloseForm from "./DesgloseForm";
-import AplicaPresupuestoInline from "./AplicaPresupuestoInline";
+import DesgloseGeneralForm from "./DesgloseGeneralForm";
+import ElementoDesgloseRow from "./ElementoDesgloseRow";
 
 export default async function EscenasPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -42,12 +43,19 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
     .or(`proyecto_id.eq.${proyectoId},proyecto_id.is.null`)
     .order("orden");
 
+  const SELECT_ELEMENTO =
+    "id, escena_id, categoria_id, descripcion, notas, departamento_id, status, desglose_categorias(id, nombre), departamentos(id, nombre), presupuesto_items(id, rubro_id, cantidad, tipo_unidad, costo_unitario, importancia, es_prestado, prestado_de)";
+
   const { data: elementosRaw } = await supabase
     .from("desglose_elementos")
-    .select(
-      "id, escena_id, categoria_id, descripcion, notas, departamento_id, status, desglose_categorias(id, nombre), departamentos(id, nombre), presupuesto_items(id, rubro_id, cantidad, tipo_unidad, costo_unitario, importancia, es_prestado, prestado_de)"
-    )
+    .select(SELECT_ELEMENTO)
     .in("escena_id", (escenas ?? []).map((e) => e.id));
+
+  const { data: elementosGeneralesRaw } = await supabase
+    .from("desglose_elementos")
+    .select(SELECT_ELEMENTO)
+    .eq("proyecto_id", proyectoId)
+    .is("escena_id", null);
 
   const elementosPorEscena = new Map<string, DesgloseElemento[]>();
   for (const el of (elementosRaw ?? []) as unknown as (DesgloseElemento & { escena_id: string })[]) {
@@ -60,6 +68,13 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
     esAdOProduccion || !el.departamento_id || miDepartamentos.includes(el.departamentos?.nombre ?? "");
   const puedeEditarElemento = (el: DesgloseElemento) =>
     esAdOProduccion || (el.departamento_id && miDepartamentos.includes(el.departamentos?.nombre ?? ""));
+
+  const elementosGenerales = ((elementosGeneralesRaw ?? []) as unknown as DesgloseElemento[]).filter(
+    puedeVerElemento
+  );
+  const misDepartamentosObjetos = ((departamentos as Departamento[] | null) ?? []).filter((d) =>
+    miDepartamentos.includes(d.nombre)
+  );
 
   return (
     <div className="grid gap-4">
@@ -79,6 +94,41 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
         </details>
       )}
 
+      <details className="rounded-lg border border-neutral-200 bg-white shadow-sm" open>
+        <summary className="cursor-pointer px-5 py-4 font-semibold text-negro">
+          Equipo y desglose general
+          <span className="ml-2 text-xs font-normal text-neutral-400">
+            (no ligado a una escena — ej. equipo de cámara/luces)
+          </span>
+        </summary>
+        <div className="border-t border-neutral-100 p-5">
+          <div className="grid gap-2">
+            {elementosGenerales.map((el) => (
+              <ElementoDesgloseRow
+                key={el.id}
+                proyectoId={proyectoId}
+                el={el}
+                puedeEditar={!!puedeEditarElemento(el)}
+                esAdOProduccion={esAdOProduccion}
+                rubros={rubros ?? []}
+              />
+            ))}
+            {elementosGenerales.length === 0 && <p className="text-sm text-neutral-400">Nada pedido todavía.</p>}
+          </div>
+
+          {(esAdOProduccion || misDepartamentosObjetos.length > 0) && (
+            <DesgloseGeneralForm
+              proyectoId={proyectoId}
+              categorias={(categorias as DesgloseCategoria[] | null) ?? []}
+              departamentos={(departamentos as Departamento[] | null) ?? []}
+              misDepartamentos={misDepartamentosObjetos}
+              rubros={rubros ?? []}
+              esAdOProduccion={esAdOProduccion}
+            />
+          )}
+        </div>
+      </details>
+
       {(escenas ?? []).length === 0 && (
         <p className="rounded-lg border border-neutral-200 bg-white p-10 text-center text-neutral-500 shadow-sm">
           Aún no hay escenas. Se crean automáticamente al escribir encabezados de escena en la pestaña Guion.
@@ -96,64 +146,14 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
               <EscenaTexto texto={segmentosGuion[idx] ?? ""} />
               <div className="grid gap-2">
                 {elementos.map((el) => (
-                  <div key={el.id} className="rounded border border-neutral-100 bg-neutral-50 px-3 py-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <span className="mr-2 rounded bg-neutral-200 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-neutral-600">
-                          {el.desglose_categorias.nombre}
-                        </span>
-                        <span className="text-sm text-negro">{el.descripcion}</span>
-                        {el.notas && <span className="ml-2 text-xs text-neutral-400">({el.notas})</span>}
-                        {el.departamentos && (
-                          <span className="ml-2 text-xs font-semibold text-neutral-400">
-                            → {el.departamentos.nombre}
-                          </span>
-                        )}
-                      </div>
-                      {puedeEditarElemento(el) ? (
-                        <div className="flex items-center gap-2">
-                          <form
-                            action={actualizarStatusElemento.bind(
-                              null,
-                              proyectoId,
-                              el.id,
-                              el.status === "confirmado" ? "pendiente" : "confirmado"
-                            )}
-                          >
-                            <button
-                              className={`rounded px-2 py-1 text-[0.65rem] font-bold uppercase ${
-                                el.status === "confirmado" ? "bg-verde/15 text-verde" : "bg-amarillo/20 text-amarillo"
-                              }`}
-                            >
-                              {el.status === "confirmado" ? "Confirmado" : "Pendiente"}
-                            </button>
-                          </form>
-                          {esAdOProduccion && (
-                            <form action={eliminarElemento.bind(null, proyectoId, el.id)}>
-                              <button className="text-xs text-neutral-300 hover:text-rojo">✕</button>
-                            </form>
-                          )}
-                        </div>
-                      ) : (
-                        <span
-                          className={`rounded px-2 py-1 text-[0.65rem] font-bold uppercase ${
-                            el.status === "confirmado" ? "bg-verde/15 text-verde" : "bg-amarillo/20 text-amarillo"
-                          }`}
-                        >
-                          {el.status === "confirmado" ? "Confirmado" : "Pendiente"}
-                        </span>
-                      )}
-                    </div>
-                    {puedeEditarElemento(el) && el.departamento_id && (
-                      <AplicaPresupuestoInline
-                        proyectoId={proyectoId}
-                        elementoId={el.id}
-                        departamentoId={el.departamento_id}
-                        rubros={rubros ?? []}
-                        itemExistente={el.presupuesto_items?.[0] ?? null}
-                      />
-                    )}
-                  </div>
+                  <ElementoDesgloseRow
+                    key={el.id}
+                    proyectoId={proyectoId}
+                    el={el}
+                    puedeEditar={!!puedeEditarElemento(el)}
+                    esAdOProduccion={esAdOProduccion}
+                    rubros={rubros ?? []}
+                  />
                 ))}
                 {elementos.length === 0 && <p className="text-sm text-neutral-400">Sin desglose todavía.</p>}
               </div>

@@ -2,22 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { actualizarPorcentajeHito } from "./actions";
-
-function colorBarra(p: number) {
-  if (p >= 100) return "bg-verde";
-  if (p <= 0) return "bg-rojo";
-  return "bg-amarillo";
-}
-
-function colorPastilla(p: number) {
-  if (p >= 100) return "bg-verde/15 text-verde";
-  if (p <= 0) return "bg-rojo/15 text-rojo";
-  return "bg-amarillo/20 text-amarillo";
-}
-
-function etiqueta(p: number) {
-  return p >= 100 ? "Hecho" : `${p}%`;
-}
+import { PASOS_PORCENTAJE, colorBarra, colorPastilla, etiquetaPorcentaje } from "./colores";
 
 export default function PorcentajeHito({
   proyectoId,
@@ -30,33 +15,35 @@ export default function PorcentajeHito({
   porcentajeInicial: number;
   editable: boolean;
 }) {
-  const [porcentaje, setPorcentaje] = useState(porcentajeInicial);
+  const indiceInicial = Math.max(0, PASOS_PORCENTAJE.indexOf(porcentajeInicial as (typeof PASOS_PORCENTAJE)[number]));
+  const [indice, setIndice] = useState(indiceInicial === -1 ? 0 : indiceInicial);
   const [, startTransition] = useTransition();
+  const porcentaje = PASOS_PORCENTAJE[indice];
 
-  function guardar(valor: number) {
-    setPorcentaje(valor);
-    startTransition(() => actualizarPorcentajeHito(proyectoId, hitoId, valor));
+  function guardar(nuevoIndice: number) {
+    setIndice(nuevoIndice);
+    startTransition(() => actualizarPorcentajeHito(proyectoId, hitoId, PASOS_PORCENTAJE[nuevoIndice]));
   }
 
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-neutral-200">
-        <div className={`h-full ${colorBarra(porcentaje)}`} style={{ width: `${porcentaje}%` }} />
-      </div>
-      {editable && (
+      {editable ? (
         <input
-          type="number"
+          type="range"
           min={0}
-          max={100}
-          step={5}
-          value={porcentaje}
-          onChange={(e) => setPorcentaje(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-          onBlur={(e) => guardar(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-          className="w-14 rounded border border-neutral-300 px-1.5 py-1 text-xs"
+          max={PASOS_PORCENTAJE.length - 1}
+          step={1}
+          value={indice}
+          onChange={(e) => guardar(Number(e.target.value))}
+          className="w-24 accent-rojo"
         />
+      ) : (
+        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-neutral-200">
+          <div className={`h-full ${colorBarra(porcentaje)}`} style={{ width: `${porcentaje}%` }} />
+        </div>
       )}
       <span className={`rounded px-2 py-1 text-xs font-bold uppercase ${colorPastilla(porcentaje)}`}>
-        {etiqueta(porcentaje)}
+        {etiquetaPorcentaje(porcentaje)}
       </span>
     </div>
   );

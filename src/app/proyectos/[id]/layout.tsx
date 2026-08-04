@@ -20,7 +20,7 @@ export default async function ProyectoLayout(
     { href: `/proyectos/${id}/presentaciones`, label: "Presentaciones" },
     ...(miDepartamentos.includes("Dirección/AD") ? [{ href: `/proyectos/${id}/ideas`, label: "Ideas" }] : []),
     ...(esAdOProduccion ? [{ href: `/proyectos/${id}/documentos`, label: "Documentos" }] : []),
-    ...(esAdOProduccion ? [{ href: `/proyectos/${id}/ajustes`, label: "Ajustes" }] : []),
+    ...(miDepartamentos.includes("Dirección/AD") ? [{ href: `/proyectos/${id}/ajustes`, label: "Ajustes" }] : []),
   ];
 
   return (

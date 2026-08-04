@@ -3,6 +3,13 @@ import { agregarHito, eliminarHito } from "./actions";
 import type { Departamento } from "@/lib/types";
 import CopiarLinkCalendario from "./CopiarLinkCalendario";
 import PorcentajeHito from "./PorcentajeHito";
+import { colorTarjeta } from "./colores";
+
+function etiquetaMes(fecha: string | null) {
+  if (!fecha) return "Sin fecha";
+  const texto = new Date(`${fecha}T00:00:00`).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 type Hito = {
   id: string;
@@ -34,6 +41,14 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
   const hitos = (hitosRaw ?? []) as unknown as Hito[];
   const hoy = new Date().toISOString().slice(0, 10);
 
+  const grupos: { etiqueta: string; hitos: Hito[] }[] = [];
+  for (const h of hitos) {
+    const etiqueta = etiquetaMes(h.fecha_limite);
+    const grupo = grupos.find((g) => g.etiqueta === etiqueta);
+    if (grupo) grupo.hitos.push(h);
+    else grupos.push({ etiqueta, hitos: [h] });
+  }
+
   const { data: departamentos } = esAdOProduccion
     ? await supabase.from("departamentos").select("id, nombre, orden").order("orden")
     : { data: null };
@@ -50,56 +65,63 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
         <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
           Calendario de preproducción ({hitos.length})
         </h2>
-        <div className="grid gap-3">
-          {hitos.map((h) => {
-            const vencido = h.status !== "completado" && h.fecha_limite && h.fecha_limite < hoy;
-            return (
-              <div
-                key={h.id}
-                className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 shadow-sm ${
-                  vencido ? "border-rojo" : "border-neutral-200"
-                }`}
-              >
-                <div>
-                  <div className="font-semibold text-negro">{h.nombre}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                    {h.departamentos && (
-                      <span className="rounded bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-600">
-                        {h.departamentos.nombre}
-                      </span>
-                    )}
-                    {h.personas && (
-                      <span className="rounded bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-600">
-                        → {h.personas.nombre}
-                      </span>
-                    )}
-                    {h.fecha_limite && (
-                      <span className={vencido ? "font-bold text-rojo" : ""}>
-                        {vencido ? "Venció: " : "Fecha límite: "}
-                        {h.fecha_limite}
-                      </span>
-                    )}
-                    {h.notas && <span>· {h.notas}</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <PorcentajeHito
-                    proyectoId={proyectoId}
-                    hitoId={h.id}
-                    porcentajeInicial={h.porcentaje}
-                    editable={esAdOProduccion}
-                  />
-                  {esAdOProduccion && (
-                    <form action={eliminarHito.bind(null, proyectoId, h.id)}>
-                      <button className="rounded border border-neutral-300 px-2 py-1 text-[0.65rem] font-semibold text-neutral-400 hover:border-rojo hover:text-rojo">
-                        Quitar
-                      </button>
-                    </form>
-                  )}
-                </div>
+        <div className="grid gap-6">
+          {grupos.map((grupo) => (
+            <div key={grupo.etiqueta}>
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-neutral-400">{grupo.etiqueta}</h3>
+              <div className="grid gap-3">
+                {grupo.hitos.map((h) => {
+                  const vencido = h.status !== "completado" && h.fecha_limite && h.fecha_limite < hoy;
+                  return (
+                    <div
+                      key={h.id}
+                      className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4 shadow-sm ${
+                        vencido ? "border-2 border-rojo" : colorTarjeta(h.porcentaje)
+                      }`}
+                    >
+                      <div>
+                        <div className="font-semibold text-negro">{h.nombre}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                          {h.departamentos && (
+                            <span className="rounded bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-600">
+                              {h.departamentos.nombre}
+                            </span>
+                          )}
+                          {h.personas && (
+                            <span className="rounded bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-600">
+                              → {h.personas.nombre}
+                            </span>
+                          )}
+                          {h.fecha_limite && (
+                            <span className={vencido ? "font-bold text-rojo" : ""}>
+                              {vencido ? "Venció: " : "Fecha límite: "}
+                              {h.fecha_limite}
+                            </span>
+                          )}
+                          {h.notas && <span>· {h.notas}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <PorcentajeHito
+                          proyectoId={proyectoId}
+                          hitoId={h.id}
+                          porcentajeInicial={h.porcentaje}
+                          editable={esAdOProduccion}
+                        />
+                        {esAdOProduccion && (
+                          <form action={eliminarHito.bind(null, proyectoId, h.id)}>
+                            <button className="rounded border border-neutral-300 px-2 py-1 text-[0.65rem] font-semibold text-neutral-400 hover:border-rojo hover:text-rojo">
+                              Quitar
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
           {hitos.length === 0 && <p className="text-neutral-500">Aún no hay actividades en el calendario.</p>}
         </div>
       </section>

@@ -9,8 +9,10 @@ export async function agregarItemPresupuesto(proyectoId: string, formData: FormD
   const objetoEspecifico = String(formData.get("objeto_especifico") || "").trim();
   const cantidad = Number(formData.get("cantidad") || 1);
   const tipoUnidad = String(formData.get("tipo_unidad") || "Unidad");
-  const costoUnitario = Number(formData.get("costo_unitario") || 0);
+  const esPrestado = formData.get("es_prestado") === "on";
+  const costoUnitario = esPrestado ? 0 : Number(formData.get("costo_unitario") || 0);
   const importancia = String(formData.get("importancia") || "Obligatorio");
+  const prestadoDe = esPrestado ? String(formData.get("prestado_de") || "").trim() || null : null;
   if (!departamentoId || !rubroId || !objetoEspecifico) return;
 
   const supabase = await createClient();
@@ -32,6 +34,8 @@ export async function agregarItemPresupuesto(proyectoId: string, formData: FormD
     tipo_unidad: tipoUnidad,
     costo_unitario: costoUnitario,
     importancia,
+    es_prestado: esPrestado,
+    prestado_de: prestadoDe,
     created_by: persona?.id ?? null,
   });
 

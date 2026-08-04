@@ -144,12 +144,15 @@ export default function TomaForm({ proyectoId, escenaId }: { proyectoId: string;
       <input name="descripcion" placeholder="Descripción de la toma" className="rounded border border-neutral-300 px-2 py-2 text-sm" />
       <input name="notas" placeholder="Notas" className="rounded border border-neutral-300 px-2 py-2 text-sm" />
       <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-          className="text-xs text-neutral-500"
-        />
+        <label className="grid gap-1 text-xs">
+          <span className="font-bold uppercase tracking-wide text-neutral-600">Imagen de referencia</span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+            className="text-xs text-neutral-500"
+          />
+        </label>
         <input type="hidden" name="imagen_url" />
         <button
           type="submit"

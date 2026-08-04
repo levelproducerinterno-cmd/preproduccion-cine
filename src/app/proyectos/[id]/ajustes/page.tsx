@@ -6,9 +6,9 @@ import FirmaUpload from "./FirmaUpload";
 
 export default async function AjustesPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
-  const { proyecto, esAdOProduccion } = await getProyectoContext(proyectoId);
+  const { proyecto, miDepartamentos } = await getProyectoContext(proyectoId);
 
-  if (!esAdOProduccion) redirect(`/proyectos/${proyectoId}/crew`);
+  if (!miDepartamentos.includes("Dirección/AD")) redirect(`/proyectos/${proyectoId}/crew`);
 
   return (
     <div className="max-w-lg grid gap-6">

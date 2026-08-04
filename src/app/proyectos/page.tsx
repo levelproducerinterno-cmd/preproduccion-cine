@@ -51,7 +51,7 @@ export default async function ProyectosPage() {
           {proyectos.map((p) => (
             <Link
               key={p.id}
-              href={`/proyectos/${p.id}/crew`}
+              href={`/proyectos/${p.id}/calendario`}
               className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-5 py-4 shadow-sm hover:border-rojo"
             >
               <div>

@@ -238,18 +238,31 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
                 />
               </div>
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                Importancia
-              </label>
-              <select
-                name="importancia"
-                defaultValue="Obligatorio"
-                className="w-full max-w-xs rounded border border-neutral-300 px-3 py-2"
-              >
-                <option value="Obligatorio">Obligatorio</option>
-                <option value="Bien si se toma">Bien si se toma</option>
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
+                  Importancia
+                </label>
+                <select
+                  name="importancia"
+                  defaultValue="Obligatorio"
+                  className="w-full rounded border border-neutral-300 px-3 py-2"
+                >
+                  <option value="Obligatorio">Obligatorio</option>
+                  <option value="Bien si se toma">Bien si se toma</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-neutral-600">
+                  <input type="checkbox" name="es_prestado" className="normal-case" />
+                  Prestado (no se compra)
+                </label>
+                <input
+                  name="prestado_de"
+                  placeholder="¿Quién lo presta? (si aplica)"
+                  className="w-full rounded border border-neutral-300 px-3 py-2"
+                />
+              </div>
             </div>
             <button className="mt-2 rounded bg-rojo py-3 font-semibold text-hueso hover:brightness-110">
               + Agregar gasto

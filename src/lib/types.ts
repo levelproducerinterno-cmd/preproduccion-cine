@@ -164,7 +164,8 @@ export type PresupuestoItemDeElemento = {
 
 export type DesgloseElemento = {
   id: string;
-  escena_id: string;
+  proyecto_id: string;
+  escena_id: string | null;
   categoria_id: string;
   descripcion: string;
   notas: string | null;
