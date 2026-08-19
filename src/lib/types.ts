@@ -44,6 +44,7 @@ export type DiaRodajeCrewLlamado = {
   proyecto_crew_id: string;
   llamado: string | null;
   locacion_url: string | null;
+  no_disponible: boolean;
 };
 
 export type Talento = {
@@ -52,6 +53,19 @@ export type Talento = {
   personaje: string | null;
   nombre: string;
   telefono: string | null;
+  orden: number;
+  sexo: string | null;
+  estatura: string | null;
+  tallas: string | null;
+  medidas: string | null;
+  descripcion: string | null;
+  caracterizacion: string | null;
+};
+
+export type TalentoFoto = {
+  id: string;
+  talento_id: string;
+  url: string;
   orden: number;
 };
 

@@ -24,6 +24,7 @@ import {
   agregarLocacion,
   eliminarLocacion,
   actualizarLlamadoCrew,
+  actualizarNoDisponibleCrew,
   agregarTalento,
   eliminarTalento,
   actualizarLlamadoTalento,
@@ -32,6 +33,7 @@ import CeldaEditable from "./CeldaEditable";
 import ArteDeToma from "./ArteDeToma";
 import PlanRodajePdfBoton from "./PlanRodajePdfBoton";
 import HojaLlamadoPdfBoton from "./HojaLlamadoPdfBoton";
+import { colorEscena, LEYENDA_COLORES } from "./colorEscena";
 
 export type RenglonPlan =
   | { tipo: "bloque"; id: string; clave: number; hora: string | null; descripcion: string }
@@ -380,13 +382,18 @@ function DiaPlanRodaje({
                   </tr>
                 </thead>
                 <tbody>
-                  {crew.map((c) => (
-                    <tr key={c.id}>
-                      <td className={td}>{c.puesto_especifico || "-"}</td>
-                      <td className={td}>{c.personas.nombre}</td>
-                      <td className={td}>{llamadoPorCrew.get(c.id)?.llamado || dia.llamado_general || "-"}</td>
-                    </tr>
-                  ))}
+                  {crew.map((c) => {
+                    const noDisponible = llamadoPorCrew.get(c.id)?.no_disponible;
+                    return (
+                      <tr key={c.id} className={noDisponible ? "bg-neutral-100 text-neutral-400 line-through" : ""}>
+                        <td className={td}>{c.puesto_especifico || "-"}</td>
+                        <td className={td}>{c.personas.nombre}</td>
+                        <td className={td}>
+                          {noDisponible ? "No disponible" : llamadoPorCrew.get(c.id)?.llamado || dia.llamado_general || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -396,6 +403,14 @@ function DiaPlanRodaje({
         {puedeReordenar && filas.length > 1 && (
           <p className="mb-1 text-[0.65rem] text-neutral-400">Arrastra ⠿ para cambiar el orden de rodaje.</p>
         )}
+        <div className="mb-2 flex flex-wrap gap-3 text-[0.65rem] text-neutral-500">
+          {LEYENDA_COLORES.map((l) => (
+            <span key={l.etiqueta} className="flex items-center gap-1">
+              <span className={`inline-block h-2.5 w-2.5 rounded-sm border border-neutral-300 ${l.clase}`} />
+              {l.etiqueta}
+            </span>
+          ))}
+        </div>
         <div className="overflow-x-auto rounded border border-neutral-100">
           <table className="w-full min-w-[1150px] border-collapse text-xs">
             <thead>
@@ -449,7 +464,7 @@ function DiaPlanRodaje({
                 ) : (
                   <tr
                     key={r.id}
-                    className={arrastrando === indice ? "opacity-40" : ""}
+                    className={`${colorEscena(r.escena)} ${arrastrando === indice ? "opacity-40" : ""}`}
                     draggable={puedeReordenar}
                     onDragStart={() => setArrastrando(indice)}
                     onDragOver={(e) => e.preventDefault()}
@@ -638,17 +653,21 @@ function DiaHojaLlamado({
                   <th className={th}>Nombre</th>
                   <th className={th}>Llamado</th>
                   <th className={th}>Locación</th>
+                  <th className={th}>Disponible</th>
                 </tr>
               </thead>
               <tbody>
                 {crew.map((c) => {
                   const ll = llamadoPorCrew.get(c.id);
+                  const noDisponible = ll?.no_disponible ?? false;
                   return (
-                    <tr key={c.id}>
+                    <tr key={c.id} className={noDisponible ? "bg-neutral-100 text-neutral-400" : ""}>
                       <td className={td}>{c.puesto_especifico || "-"}</td>
                       <td className={td}>{c.personas.nombre}</td>
                       <td className={td}>
-                        {esAdOProduccion ? (
+                        {noDisponible ? (
+                          "—"
+                        ) : esAdOProduccion ? (
                           <CeldaEditable
                             valorInicial={ll?.llamado ?? ""}
                             placeholder={dia.llamado_general ?? ""}
@@ -659,13 +678,35 @@ function DiaHojaLlamado({
                         )}
                       </td>
                       <td className={td}>
-                        {esAdOProduccion ? (
+                        {noDisponible ? (
+                          "—"
+                        ) : esAdOProduccion ? (
                           <CeldaEditable
                             valorInicial={ll?.locacion_url ?? ""}
                             onGuardar={(v) => startTransition(() => actualizarLlamadoCrew(proyectoId, dia.id, c.id, "locacion_url", v))}
                           />
                         ) : (
                           ll?.locacion_url || "-"
+                        )}
+                      </td>
+                      <td className={td}>
+                        {esAdOProduccion ? (
+                          <label className="flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={noDisponible}
+                              onChange={(e) =>
+                                startTransition(() =>
+                                  actualizarNoDisponibleCrew(proyectoId, dia.id, c.id, e.target.checked)
+                                )
+                              }
+                            />
+                            No disponible
+                          </label>
+                        ) : noDisponible ? (
+                          <span className="font-bold text-rojo">No disponible</span>
+                        ) : (
+                          "-"
                         )}
                       </td>
                     </tr>

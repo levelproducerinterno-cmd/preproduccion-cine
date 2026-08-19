@@ -111,6 +111,8 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
                 puedeEditar={!!puedeEditarElemento(el)}
                 esAdOProduccion={esAdOProduccion}
                 rubros={rubros ?? []}
+                categorias={(categorias as DesgloseCategoria[] | null) ?? []}
+                departamentos={(departamentos as Departamento[] | null) ?? []}
               />
             ))}
             {elementosGenerales.length === 0 && <p className="text-sm text-neutral-400">Nada pedido todavía.</p>}
@@ -153,6 +155,8 @@ export default async function EscenasPage(props: { params: Promise<{ id: string 
                     puedeEditar={!!puedeEditarElemento(el)}
                     esAdOProduccion={esAdOProduccion}
                     rubros={rubros ?? []}
+                    categorias={(categorias as DesgloseCategoria[] | null) ?? []}
+                    departamentos={(departamentos as Departamento[] | null) ?? []}
                   />
                 ))}
                 {elementos.length === 0 && <p className="text-sm text-neutral-400">Sin desglose todavía.</p>}

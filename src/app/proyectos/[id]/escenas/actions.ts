@@ -139,6 +139,22 @@ export async function actualizarStatusElemento(
   revalidatePath(`/proyectos/${proyectoId}/escenas`);
 }
 
+export async function actualizarElemento(proyectoId: string, elementoId: string, formData: FormData) {
+  const categoriaId = String(formData.get("categoria_id") || "");
+  const descripcion = String(formData.get("descripcion") || "").trim();
+  const notas = String(formData.get("notas") || "").trim() || null;
+  const departamentoId = String(formData.get("departamento_id") || "") || null;
+  if (!categoriaId || !descripcion) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("desglose_elementos")
+    .update({ categoria_id: categoriaId, descripcion, notas, departamento_id: departamentoId })
+    .eq("id", elementoId);
+
+  revalidatePath(`/proyectos/${proyectoId}/escenas`);
+}
+
 export async function eliminarElemento(proyectoId: string, elementoId: string) {
   const supabase = await createClient();
   await supabase.from("desglose_elementos").delete().eq("id", elementoId);

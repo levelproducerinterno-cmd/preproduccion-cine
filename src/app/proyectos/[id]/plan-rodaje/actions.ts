@@ -188,6 +188,32 @@ export async function actualizarLlamadoCrew(
   revalidatePath(ruta(proyectoId));
 }
 
+export async function actualizarNoDisponibleCrew(
+  proyectoId: string,
+  diaRodajeId: string,
+  proyectoCrewId: string,
+  noDisponible: boolean
+) {
+  const supabase = await createClient();
+  const { data: existente } = await supabase
+    .from("dia_rodaje_crew_llamados")
+    .select("id")
+    .eq("dia_rodaje_id", diaRodajeId)
+    .eq("proyecto_crew_id", proyectoCrewId)
+    .maybeSingle();
+
+  if (existente) {
+    await supabase.from("dia_rodaje_crew_llamados").update({ no_disponible: noDisponible }).eq("id", existente.id);
+  } else {
+    await supabase.from("dia_rodaje_crew_llamados").insert({
+      dia_rodaje_id: diaRodajeId,
+      proyecto_crew_id: proyectoCrewId,
+      no_disponible: noDisponible,
+    });
+  }
+  revalidatePath(ruta(proyectoId));
+}
+
 export async function agregarTalento(proyectoId: string, formData: FormData) {
   const nombre = String(formData.get("nombre") || "").trim();
   if (!nombre) return;

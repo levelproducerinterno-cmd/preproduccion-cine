@@ -15,6 +15,7 @@ export default async function ProyectoLayout(
     { href: `/proyectos/${id}/escenas`, label: "Escenas / Desglose" },
     { href: `/proyectos/${id}/shotlist`, label: "Shotlist" },
     { href: `/proyectos/${id}/plan-rodaje`, label: "Plan de Rodaje" },
+    { href: `/proyectos/${id}/casting`, label: "Casting y Talento" },
     { href: `/proyectos/${id}/calendario`, label: "Calendario" },
     { href: `/proyectos/${id}/presupuesto`, label: "Presupuesto" },
     { href: `/proyectos/${id}/presentaciones`, label: "Presentaciones" },

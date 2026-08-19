@@ -8,6 +8,7 @@ import {
   desactivarInvitacion,
 } from "./actions";
 import type { Departamento, ProyectoCrew } from "@/lib/types";
+import EditarCrewForm from "./EditarCrewForm";
 
 const STATUS_LABEL: Record<string, string> = {
   confirmado: "Confirmado",
@@ -134,6 +135,15 @@ export default async function CrewPage(props: { params: Promise<{ id: string }> 
                     )}
                   </div>
                 </div>
+                {esAdOProduccion && (
+                  <EditarCrewForm
+                    proyectoId={proyectoId}
+                    crewId={c.id}
+                    puestoActual={c.puesto_especifico}
+                    departamentos={(departamentos as Departamento[] | null) ?? []}
+                    departamentoIdsActuales={c.proyecto_crew_departamentos.map((d) => d.departamento_id)}
+                  />
+                )}
               </div>
             );
           })}

@@ -80,7 +80,7 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
 
   const { data: crewLlamadosRaw } = await supabase
     .from("dia_rodaje_crew_llamados")
-    .select("id, dia_rodaje_id, proyecto_crew_id, llamado, locacion_url")
+    .select("id, dia_rodaje_id, proyecto_crew_id, llamado, locacion_url, no_disponible")
     .in("dia_rodaje_id", diaIds);
   const crewLlamados = (crewLlamadosRaw ?? []) as DiaRodajeCrewLlamado[];
 

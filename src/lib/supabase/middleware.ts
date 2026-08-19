@@ -29,8 +29,11 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
   const isInviteRoute = request.nextUrl.pathname.startsWith("/unirse");
+  // El feed de calendario (.ics) lo consumen Google/Apple/Outlook sin sesión —
+  // se protege con el token secreto de la URL, no con login.
+  const isIcalRoute = request.nextUrl.pathname.startsWith("/api/ical");
 
-  if (!user && !isAuthRoute && !isInviteRoute) {
+  if (!user && !isAuthRoute && !isInviteRoute && !isIcalRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

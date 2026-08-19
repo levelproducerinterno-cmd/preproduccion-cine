@@ -13,6 +13,21 @@ function escaparTexto(texto: string) {
   return texto.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
 }
 
+// RFC 5545: las líneas de más de 75 octetos deben "plegarse" con un salto de
+// línea seguido de un espacio; si no, algunos clientes (Apple Calendar entre
+// ellos) rechazan el archivo completo como inválido.
+function plegarLinea(linea: string) {
+  const limite = 75;
+  if (linea.length <= limite) return linea;
+  let resultado = linea.slice(0, limite);
+  let resto = linea.slice(limite);
+  while (resto.length > 0) {
+    resultado += "\r\n " + resto.slice(0, limite - 1);
+    resto = resto.slice(limite - 1);
+  }
+  return resultado;
+}
+
 function fechaSinGuiones(fecha: string) {
   return fecha.replace(/-/g, "");
 }
@@ -52,7 +67,9 @@ export async function GET(_req: Request, props: { params: Promise<{ token: strin
         ...(descripcion ? [`DESCRIPTION:${descripcion}`] : []),
         `STATUS:${h.status === "completado" ? "CONFIRMED" : "TENTATIVE"}`,
         "END:VEVENT",
-      ].join("\r\n");
+      ]
+        .map(plegarLinea)
+        .join("\r\n");
     })
     .join("\r\n");
 

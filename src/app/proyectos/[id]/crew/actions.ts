@@ -74,6 +74,27 @@ export async function actualizarStatusConfirmacion(
   revalidatePath(`/proyectos/${proyectoId}/crew`);
 }
 
+export async function actualizarCrew(proyectoId: string, crewId: string, formData: FormData) {
+  const puestoEspecifico = String(formData.get("puesto_especifico") || "").trim();
+  const departamentoIds = formData.getAll("departamentos").map(String);
+
+  const supabase = await createClient();
+
+  await supabase
+    .from("proyecto_crew")
+    .update({ puesto_especifico: puestoEspecifico || null })
+    .eq("id", crewId);
+
+  await supabase.from("proyecto_crew_departamentos").delete().eq("proyecto_crew_id", crewId);
+  if (departamentoIds.length > 0) {
+    await supabase.from("proyecto_crew_departamentos").insert(
+      departamentoIds.map((depId) => ({ proyecto_crew_id: crewId, departamento_id: depId }))
+    );
+  }
+
+  revalidatePath(`/proyectos/${proyectoId}/crew`);
+}
+
 export async function eliminarCrew(proyectoId: string, crewId: string) {
   const supabase = await createClient();
   await supabase.from("proyecto_crew").delete().eq("id", crewId);

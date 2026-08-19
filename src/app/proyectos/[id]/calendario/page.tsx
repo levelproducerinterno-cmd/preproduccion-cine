@@ -106,7 +106,7 @@ export default async function CalendarioPage(props: { params: Promise<{ id: stri
                           proyectoId={proyectoId}
                           hitoId={h.id}
                           porcentajeInicial={h.porcentaje}
-                          editable={esAdOProduccion}
+                          editable={esAdOProduccion || h.persona_id === persona.id}
                         />
                         {esAdOProduccion && (
                           <form action={eliminarHito.bind(null, proyectoId, h.id)}>
