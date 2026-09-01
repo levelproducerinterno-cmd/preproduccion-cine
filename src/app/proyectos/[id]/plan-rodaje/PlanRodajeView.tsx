@@ -500,9 +500,12 @@ function DiaPlanRodaje({
                     <td className={`${td} max-w-[16rem]`}>{r.toma.descripcion ?? "-"}</td>
                     <td className={td}>
                       {puedeEditarTomas ? (
-                        <CeldaEditable valorInicial={r.toma.talento_en_toma ?? ""} onGuardar={editarToma(r.toma.id, "talento_en_toma")} />
+                        <CeldaEditable
+                          valorInicial={r.toma.talento_en_toma ?? r.toma.subject ?? ""}
+                          onGuardar={editarToma(r.toma.id, "talento_en_toma")}
+                        />
                       ) : (
-                        r.toma.talento_en_toma
+                        r.toma.talento_en_toma || r.toma.subject || "-"
                       )}
                     </td>
                     <td className={td}>{r.escena.locacion ?? "-"}</td>

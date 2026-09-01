@@ -42,6 +42,38 @@ export async function agregarToma(proyectoId: string, escenaId: string, formData
   revalidatePath(`/proyectos/${proyectoId}/shotlist`);
 }
 
+const CAMPOS_EDITABLES = [
+  "setup_num",
+  "shot_num",
+  "subject",
+  "shot_size",
+  "camara",
+  "angulo",
+  "movimiento",
+  "equipo",
+  "lente",
+  "sonido",
+  "descripcion",
+  "notas",
+  "importancia",
+] as const;
+
+export async function actualizarCampoToma(
+  proyectoId: string,
+  tomaId: string,
+  campo: (typeof CAMPOS_EDITABLES)[number],
+  valor: string
+) {
+  if (!CAMPOS_EDITABLES.includes(campo)) return;
+  const supabase = await createClient();
+  await supabase
+    .from("tomas")
+    .update({ [campo]: valor || null })
+    .eq("id", tomaId);
+  revalidatePath(`/proyectos/${proyectoId}/shotlist`);
+  revalidatePath(`/proyectos/${proyectoId}/plan-rodaje`);
+}
+
 export async function eliminarToma(proyectoId: string, tomaId: string) {
   const supabase = await createClient();
   await supabase.from("tomas").delete().eq("id", tomaId);

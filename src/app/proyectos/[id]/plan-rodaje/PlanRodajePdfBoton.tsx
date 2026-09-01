@@ -61,7 +61,7 @@ export default function PlanRodajePdfBoton({
               r.escena.momento ?? "-",
               r.toma.set_especifico || r.escena.locacion || "-",
               r.toma.descripcion ?? "-",
-              r.toma.talento_en_toma ?? "-",
+              r.toma.talento_en_toma || r.toma.subject || "-",
               r.escena.locacion ?? "-",
               r.toma.notas_arte ?? "-",
             ]

@@ -10,20 +10,27 @@ export async function agregarCrew(proyectoId: string, formData: FormData) {
   const fechaLimite = String(formData.get("fecha_limite_confirmacion") || "") || null;
   const departamentoIds = formData.getAll("departamentos").map(String);
 
-  if (!nombre || !email) return;
+  if (!nombre) return;
 
   const supabase = await createClient();
 
-  let { data: persona } = await supabase
-    .from("personas")
-    .select("id")
-    .ilike("email", email)
-    .maybeSingle();
+  // Sin correo: la persona no puede iniciar sesión todavía, pero igual queda
+  // en el crew del proyecto para que aparezca en Plan de Rodaje y demás.
+  let persona: { id: string } | null = null;
+
+  if (email) {
+    const { data: existente } = await supabase
+      .from("personas")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+    persona = existente;
+  }
 
   if (!persona) {
     const { data: nueva, error } = await supabase
       .from("personas")
-      .insert({ nombre, email })
+      .insert({ nombre, email: email || null })
       .select("id")
       .single();
     if (error || !nueva) {

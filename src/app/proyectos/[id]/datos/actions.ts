@@ -85,7 +85,7 @@ export async function obtenerRespuestasPersona(crewId: string) {
 
   return {
     nombre: (crew.personas as unknown as { nombre: string }).nombre,
-    email: (crew.personas as unknown as { email: string }).email,
+    email: (crew.personas as unknown as { email: string | null }).email ?? "Sin correo registrado",
     puesto: crew.puesto_especifico,
     items: (preguntas ?? []).map((p) => ({
       texto: p.texto,

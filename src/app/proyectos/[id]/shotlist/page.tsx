@@ -1,10 +1,13 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
-import { eliminarToma } from "./actions";
+import { eliminarToma, actualizarCampoToma } from "./actions";
 import TomaForm from "./TomaForm";
 import ShotlistPdfBoton from "./ShotlistPdfBoton";
 import type { Escena, Toma } from "@/lib/types";
 import { extraerSegmentosPorEscena } from "@/lib/guion-parse";
 import EscenaTexto from "@/components/EscenaTexto";
+import CeldaEditable from "../plan-rodaje/CeldaEditable";
+
+const celdaClase = "w-full min-w-[4rem] border-none bg-transparent p-0 text-xs outline-none placeholder:text-neutral-300 focus:ring-0";
 
 export default async function ShotlistPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
@@ -103,26 +106,51 @@ export default async function ShotlistPage(props: { params: Promise<{ id: string
                               "-"
                             )}
                           </td>
-                          <td className="border border-neutral-100 p-2">{t.setup_num ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.shot_num ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.subject ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.shot_size ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.camara ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.angulo ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.movimiento ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.equipo ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.lente ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.sonido ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.descripcion ?? "-"}</td>
-                          <td className="border border-neutral-100 p-2">{t.notas ?? "-"}</td>
+                          {(
+                            [
+                              ["setup_num", t.setup_num],
+                              ["shot_num", t.shot_num],
+                              ["subject", t.subject],
+                              ["shot_size", t.shot_size],
+                              ["camara", t.camara],
+                              ["angulo", t.angulo],
+                              ["movimiento", t.movimiento],
+                              ["equipo", t.equipo],
+                              ["lente", t.lente],
+                              ["sonido", t.sonido],
+                              ["descripcion", t.descripcion],
+                              ["notas", t.notas],
+                            ] as const
+                          ).map(([campo, valor]) => (
+                            <td key={campo} className="border border-neutral-100 p-2">
+                              {puedeEditar ? (
+                                <CeldaEditable
+                                  valorInicial={valor ?? ""}
+                                  onGuardar={actualizarCampoToma.bind(null, proyectoId, t.id, campo)}
+                                  className={celdaClase}
+                                />
+                              ) : (
+                                valor ?? "-"
+                              )}
+                            </td>
+                          ))}
                           <td className="border border-neutral-100 p-2">
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase ${
-                                t.importancia === "Obligatorio" ? "bg-rojo/15 text-rojo" : "bg-neutral-200 text-neutral-600"
-                              }`}
-                            >
-                              {t.importancia}
-                            </span>
+                            {puedeEditar ? (
+                              <CeldaEditable
+                                valorInicial={t.importancia}
+                                onGuardar={actualizarCampoToma.bind(null, proyectoId, t.id, "importancia")}
+                                opciones={["Obligatorio", "Bien si se toma"]}
+                                className={celdaClase}
+                              />
+                            ) : (
+                              <span
+                                className={`rounded px-1.5 py-0.5 text-[0.65rem] font-bold uppercase ${
+                                  t.importancia === "Obligatorio" ? "bg-rojo/15 text-rojo" : "bg-neutral-200 text-neutral-600"
+                                }`}
+                              >
+                                {t.importancia}
+                              </span>
+                            )}
                           </td>
                           {puedeEditar && (
                             <td className="border border-neutral-100 p-2">

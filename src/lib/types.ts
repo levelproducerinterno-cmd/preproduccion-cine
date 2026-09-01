@@ -82,7 +82,7 @@ export type Persona = {
   id: string;
   auth_user_id: string | null;
   nombre: string;
-  email: string;
+  email: string | null;
   telefono: string | null;
   color: string;
   ical_token: string;

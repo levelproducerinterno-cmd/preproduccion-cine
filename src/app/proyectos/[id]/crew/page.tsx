@@ -82,7 +82,13 @@ export default async function CrewPage(props: { params: Promise<{ id: string }> 
                         style={{ background: c.personas.color }}
                       />
                       <span className="font-semibold text-negro">{c.personas.nombre}</span>
-                      <span className="text-xs text-neutral-400">{c.personas.email}</span>
+                      {c.personas.email ? (
+                        <span className="text-xs text-neutral-400">{c.personas.email}</span>
+                      ) : (
+                        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[0.65rem] font-bold uppercase text-neutral-400">
+                          Sin registrar
+                        </span>
+                      )}
                     </div>
                     {c.puesto_especifico && (
                       <div className="text-sm text-neutral-600">{c.puesto_especifico}</div>
@@ -199,14 +205,16 @@ export default async function CrewPage(props: { params: Promise<{ id: string }> 
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">
-                  Correo
+                  Correo (opcional)
                 </label>
                 <input
                   type="email"
                   name="email"
-                  required
                   className="w-full rounded border border-neutral-300 px-3 py-2"
                 />
+                <p className="mt-1 text-xs text-neutral-400">
+                  Déjalo vacío si esta persona todavía no se va a registrar — igual queda en el crew.
+                </p>
               </div>
             </div>
             <div>

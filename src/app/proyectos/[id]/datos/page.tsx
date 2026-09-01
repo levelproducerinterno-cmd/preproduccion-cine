@@ -133,7 +133,7 @@ export default async function DatosPage(props: { params: Promise<{ id: string }>
                 >
                   <div>
                     <span className="font-semibold text-negro">{crew.personas.nombre}</span>
-                    <span className="ml-2 text-xs text-neutral-400">{crew.personas.email}</span>
+                    <span className="ml-2 text-xs text-neutral-400">{crew.personas.email ?? "Sin correo"}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
