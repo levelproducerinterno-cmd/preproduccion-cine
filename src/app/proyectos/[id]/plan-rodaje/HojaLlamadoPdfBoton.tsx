@@ -134,12 +134,20 @@ export default function HojaLlamadoPdfBoton({
           head: [["Hora", "Plan de rodaje"]],
           body: renglones.map((r) => [
             r.tipo === "bloque" ? r.hora ?? "" : r.toma.hora_inicio ?? "",
-            r.tipo === "bloque" ? r.descripcion : r.toma.descripcion ?? r.escena.locacion ?? "-",
+            r.tipo === "bloque"
+              ? r.descripcion
+              : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-",
           ]),
           theme: "grid",
           styles: { fontSize: 7.5, cellPadding: 1.5 },
           headStyles: { fillColor: [10, 9, 8], textColor: 255 },
           margin: { left: 14, right: 14 },
+          didParseCell: (data) => {
+            if (data.section === "body" && renglones[data.row.index]?.tipo === "bloque") {
+              data.cell.styles.fontStyle = "bold";
+              data.cell.styles.fillColor = [225, 225, 225];
+            }
+          },
         });
       }
     }
