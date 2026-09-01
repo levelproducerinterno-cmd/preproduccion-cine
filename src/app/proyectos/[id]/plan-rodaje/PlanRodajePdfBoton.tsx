@@ -32,7 +32,7 @@ export default function PlanRodajePdfBoton({
       colorPrimario,
     });
     let y = 40;
-    const columnas = ["Hora", "Tiempo", "Plano", "Día/Noche", "Set", "Descripción", "Talento", "Locación", "Arte"];
+    const columnas = ["Escena", "Hora", "Tiempo", "Plano", "Día/Noche", "Set", "Descripción", "Talento", "Locación", "Arte"];
 
     for (const dia of dias) {
       const renglones = renglonesPorDia[dia.id] ?? [];
@@ -52,8 +52,9 @@ export default function PlanRodajePdfBoton({
 
       const filas = renglones.map((r) =>
         r.tipo === "bloque"
-          ? [r.hora ?? "", { content: r.descripcion, colSpan: 8 }]
+          ? ["", r.hora ?? "", { content: r.descripcion, colSpan: 8 }]
           : [
+              r.escena.numero,
               r.toma.hora_inicio ?? "-",
               r.toma.tiempo_estimado ?? "-",
               r.toma.shot_num || r.toma.setup_num || "-",
@@ -77,7 +78,7 @@ export default function PlanRodajePdfBoton({
         headStyles: { fillColor: [10, 9, 8], textColor: 255 },
         margin: { left: 14, right: 14 },
         didParseCell: (data) => {
-          if (data.row.raw && Array.isArray(data.row.raw) && data.row.raw.length === 2) {
+          if (data.row.raw && Array.isArray(data.row.raw) && data.row.raw.length === 3) {
             data.cell.styles.fontStyle = "bold";
             data.cell.styles.fillColor = [225, 225, 225];
           }

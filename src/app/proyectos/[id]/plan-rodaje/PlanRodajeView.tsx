@@ -416,6 +416,7 @@ function DiaPlanRodaje({
             <thead>
               <tr>
                 {puedeReordenar && <th className={th}></th>}
+                <th className={th}>Escena</th>
                 <th className={th}>Hora</th>
                 <th className={th}>Tiempo</th>
                 <th className={th}>Plano</th>
@@ -440,6 +441,7 @@ function DiaPlanRodaje({
                     onDrop={() => onDrop(indice)}
                   >
                     {puedeReordenar && <td className={`${td} cursor-grab text-center text-neutral-400`}>⠿</td>}
+                    <td className={td}></td>
                     <td className={`${td} font-bold`}>
                       {esAdOProduccion ? (
                         <CeldaEditable
@@ -471,6 +473,7 @@ function DiaPlanRodaje({
                     onDrop={() => onDrop(indice)}
                   >
                     {puedeReordenar && <td className={`${td} cursor-grab text-center text-neutral-400`}>⠿</td>}
+                    <td className={`${td} font-bold`}>{r.escena.numero}</td>
                     <td className={td}>
                       {puedeEditarTomas ? (
                         <CeldaEditable valorInicial={r.toma.hora_inicio ?? ""} onGuardar={editarToma(r.toma.id, "hora_inicio")} />
@@ -519,7 +522,7 @@ function DiaPlanRodaje({
               )}
               {filas.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-4 text-center text-neutral-400">
+                  <td colSpan={12} className="p-4 text-center text-neutral-400">
                     Sin escenas ni bloques asignados a este día todavía.
                   </td>
                 </tr>
@@ -791,7 +794,7 @@ function DiaHojaLlamado({
                     <td className={td}>
                       {r.tipo === "bloque"
                         ? r.descripcion
-                        : `${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-"}
+                        : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-"}
                     </td>
                   </tr>
                 ))}

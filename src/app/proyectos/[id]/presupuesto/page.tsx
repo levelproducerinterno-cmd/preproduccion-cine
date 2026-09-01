@@ -1,6 +1,7 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
 import { agregarItemPresupuesto, eliminarItemPresupuesto, agregarRubroCustom } from "./actions";
 import type { Departamento } from "@/lib/types";
+import PresupuestoPdfBoton from "./PresupuestoPdfBoton";
 
 type Rubro = { id: string; nombre: string; orden: number };
 type Item = {
@@ -24,7 +25,7 @@ const moneda = (n: number) =>
 
 export default async function PresupuestoPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
-  const { supabase, esAdOProduccion, miDepartamentos } = await getProyectoContext(proyectoId);
+  const { supabase, proyecto, esAdOProduccion, miDepartamentos } = await getProyectoContext(proyectoId);
 
   const { data: departamentosTodos } = await supabase
     .from("departamentos")
@@ -58,14 +59,39 @@ export default async function PresupuestoPage(props: { params: Promise<{ id: str
   }
   const totalGeneral = items.reduce((sum, it) => sum + Number(it.subtotal), 0);
 
+  const gruposPdf = [...porDepartamento.entries()].map(([departamento, depItems]) => ({
+    departamento,
+    items: depItems.map((it) => ({
+      rubro: it.presupuesto_rubros.nombre,
+      objeto: it.objeto_especifico,
+      cantidad: it.cantidad,
+      tipoUnidad: it.tipo_unidad,
+      costoUnitario: it.costo_unitario,
+      subtotal: it.subtotal,
+      importancia: it.importancia,
+      esPrestado: it.es_prestado,
+      prestadoDe: it.prestado_de,
+    })),
+    total: depItems.reduce((s, it) => s + Number(it.subtotal), 0),
+  }));
+
   return (
     <div className="grid gap-8">
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-500">
             Presupuesto {esAdOProduccion ? "(todos los departamentos)" : "(tu departamento)"}
           </h2>
-          <span className="text-lg font-bold text-negro">{moneda(totalGeneral)}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-bold text-negro">{moneda(totalGeneral)}</span>
+            <PresupuestoPdfBoton
+              nombreProyecto={proyecto.nombre}
+              logoUrl={proyecto.logo_url}
+              colorPrimario={proyecto.color_primario}
+              grupos={gruposPdf}
+              totalGeneral={totalGeneral}
+            />
+          </div>
         </div>
 
         {[...porDepartamento.entries()].map(([depNombre, depItems]) => {
