@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { DiaRodaje } from "@/lib/types";
 import type { RenglonPlan } from "./PlanRodajeView";
 import { crearDocumentoConMachote, finalizarConPiePagina } from "@/lib/pdf-machote";
+import { colorEscenaRGB, LEYENDA_COLORES_RGB } from "./colorEscena";
 
 export default function PlanRodajePdfBoton({
   proyectoNombre,
@@ -48,7 +49,20 @@ export default function PlanRodajePdfBoton({
         14,
         y
       );
-      y += 6;
+      y += 5;
+
+      doc.setFontSize(6.5);
+      doc.setFont("helvetica", "normal");
+      let xLeyenda = 14;
+      for (const l of LEYENDA_COLORES_RGB) {
+        doc.setFillColor(l.rgb[0], l.rgb[1], l.rgb[2]);
+        doc.setDrawColor(200);
+        doc.rect(xLeyenda, y - 2.5, 3, 3, "FD");
+        doc.setTextColor(90);
+        doc.text(l.etiqueta, xLeyenda + 4.5, y);
+        xLeyenda += doc.getTextWidth(l.etiqueta) + 10;
+      }
+      y += 4;
 
       const filas = renglones.map((r) =>
         r.tipo === "bloque"
@@ -81,6 +95,11 @@ export default function PlanRodajePdfBoton({
           if (data.row.raw && Array.isArray(data.row.raw) && data.row.raw.length === 3) {
             data.cell.styles.fontStyle = "bold";
             data.cell.styles.fillColor = [225, 225, 225];
+          } else if (data.section === "body") {
+            const renglon = renglones[data.row.index];
+            if (renglon && renglon.tipo === "toma") {
+              data.cell.styles.fillColor = colorEscenaRGB(renglon.escena);
+            }
           }
         },
       });
