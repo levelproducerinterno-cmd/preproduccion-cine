@@ -542,15 +542,12 @@ function DiaPlanRodaje({
             <form action={agregarBloque.bind(null, proyectoId, dia.id)} className="mt-2 flex flex-wrap gap-2">
               <input name="hora" placeholder="Hora" className="w-28 rounded border border-neutral-300 px-2 py-1.5 text-xs" />
               <input name="descripcion" placeholder="Descripción (ej. DESAYUNO)" required className="flex-1 rounded border border-neutral-300 px-2 py-1.5 text-xs" />
-              <input
-                name="orden"
-                type="number"
-                placeholder="Orden"
-                defaultValue={(filas[filas.length - 1]?.clave ?? 0) + 1}
-                className="w-24 rounded border border-neutral-300 px-2 py-1.5 text-xs"
-              />
+              <input type="hidden" name="orden" value={(filas[filas.length - 1]?.clave ?? 0) + 1} />
               <button className="rounded bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-hueso">+ Agregar</button>
             </form>
+            <p className="mt-1 text-[0.65rem] text-neutral-400">
+              El bloque se agrega al final del día — luego arrastra el ⠿ de su renglón en la tabla de arriba para moverlo a su lugar.
+            </p>
           </details>
         )}
       </div>
