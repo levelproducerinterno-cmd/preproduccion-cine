@@ -76,6 +76,7 @@ export type DiaRodajeTalentoLlamado = {
   llamado_desde: string | null;
   llamado_hasta: string | null;
   locacion_url: string | null;
+  no_se_ocupa: boolean;
 };
 
 export type Persona = {

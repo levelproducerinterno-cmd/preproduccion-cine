@@ -28,6 +28,7 @@ import {
   agregarTalento,
   eliminarTalento,
   actualizarLlamadoTalento,
+  actualizarNoSeOcupaTalento,
 } from "./actions";
 import CeldaEditable from "./CeldaEditable";
 import ArteDeToma from "./ArteDeToma";
@@ -730,17 +731,21 @@ function DiaHojaLlamado({
                   <th className={th}>Nombre</th>
                   <th className={th}>Llamado</th>
                   <th className={th}>Locación</th>
+                  <th className={th}>Se ocupa</th>
                 </tr>
               </thead>
               <tbody>
                 {talento.map((t) => {
                   const ll = llamadoPorTalento.get(t.id);
+                  const noSeOcupa = ll?.no_se_ocupa ?? false;
                   return (
-                    <tr key={t.id}>
+                    <tr key={t.id} className={noSeOcupa ? "bg-neutral-100 text-neutral-400" : ""}>
                       <td className={td}>{t.personaje || "-"}</td>
                       <td className={td}>{t.nombre}</td>
                       <td className={td}>
-                        {esAdOProduccion ? (
+                        {noSeOcupa ? (
+                          "—"
+                        ) : esAdOProduccion ? (
                           <div className="flex items-center gap-1">
                             <CeldaEditable
                               valorInicial={ll?.llamado_desde ?? ""}
@@ -759,7 +764,9 @@ function DiaHojaLlamado({
                         )}
                       </td>
                       <td className={td}>
-                        {esAdOProduccion ? (
+                        {noSeOcupa ? (
+                          "—"
+                        ) : esAdOProduccion ? (
                           <CeldaEditable
                             valorInicial={ll?.locacion_url ?? ""}
                             onGuardar={(v) => startTransition(() => actualizarLlamadoTalento(proyectoId, dia.id, t.id, "locacion_url", v))}
@@ -768,12 +775,32 @@ function DiaHojaLlamado({
                           ll?.locacion_url || "-"
                         )}
                       </td>
+                      <td className={td}>
+                        {esAdOProduccion ? (
+                          <label className="flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={noSeOcupa}
+                              onChange={(e) =>
+                                startTransition(() =>
+                                  actualizarNoSeOcupaTalento(proyectoId, dia.id, t.id, e.target.checked)
+                                )
+                              }
+                            />
+                            No se ocupa
+                          </label>
+                        ) : noSeOcupa ? (
+                          <span className="font-bold text-rojo">No se ocupa</span>
+                        ) : (
+                          "Sí"
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
                 {talento.length === 0 && (
                   <tr>
-                    <td className={td} colSpan={4}>
+                    <td className={td} colSpan={5}>
                       Sin talento agregado (agrégalo abajo, en "Elenco / Talento del proyecto").
                     </td>
                   </tr>

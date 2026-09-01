@@ -84,12 +84,17 @@ export default function HojaLlamadoPdfBoton({
         head: [["Puesto", "Nombre", "Llamado", "Locación"]],
         body: crew.map((c) => {
           const ll = llamadoPorCrew.get(c.id);
+          if (ll?.no_disponible) return [c.puesto_especifico ?? "-", c.personas.nombre, "No disponible", "-"];
           return [c.puesto_especifico ?? "-", c.personas.nombre, ll?.llamado || dia.llamado_general || "-", ll?.locacion_url ?? "-"];
         }),
         theme: "grid",
         styles: { fontSize: 7.5, cellPadding: 1.5 },
         headStyles: { fillColor: [10, 9, 8], textColor: 255 },
         margin: { left: 14, right: 14 },
+        didParseCell: (data) => {
+          const c = crew[data.row.index];
+          if (c && llamadoPorCrew.get(c.id)?.no_disponible) data.cell.styles.textColor = [160, 160, 160];
+        },
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       y = (doc as any).lastAutoTable.finalY + 6;
@@ -101,6 +106,7 @@ export default function HojaLlamadoPdfBoton({
           head: [["Personaje", "Nombre", "Llamado", "Locación"]],
           body: talento.map((t) => {
             const ll = llamadoPorTalento.get(t.id);
+            if (ll?.no_se_ocupa) return [t.personaje ?? "-", t.nombre, "No se ocupa", "-"];
             return [
               t.personaje ?? "-",
               t.nombre,
@@ -112,6 +118,10 @@ export default function HojaLlamadoPdfBoton({
           styles: { fontSize: 7.5, cellPadding: 1.5 },
           headStyles: { fillColor: [10, 9, 8], textColor: 255 },
           margin: { left: 14, right: 14 },
+          didParseCell: (data) => {
+            const t = talento[data.row.index];
+            if (t && llamadoPorTalento.get(t.id)?.no_se_ocupa) data.cell.styles.textColor = [160, 160, 160];
+          },
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         y = (doc as any).lastAutoTable.finalY + 6;
