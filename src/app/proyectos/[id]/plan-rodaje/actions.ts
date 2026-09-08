@@ -251,6 +251,20 @@ export async function agregarTalento(proyectoId: string, formData: FormData) {
   revalidatePath(ruta(proyectoId));
 }
 
+// Edición rápida desde Plan de Rodaje: solo toca personaje/nombre/teléfono,
+// para no borrar los datos de casting (medidas, fotos, etc.) capturados aparte.
+export async function actualizarTalentoBasico(proyectoId: string, talentoId: string, formData: FormData) {
+  const nombre = String(formData.get("nombre") || "").trim();
+  if (!nombre) return;
+  const personaje = String(formData.get("personaje") || "").trim() || null;
+  const telefono = String(formData.get("telefono") || "").trim() || null;
+
+  const supabase = await createClient();
+  await supabase.from("talento").update({ nombre, personaje, telefono }).eq("id", talentoId);
+  revalidatePath(ruta(proyectoId));
+  revalidatePath(`/proyectos/${proyectoId}/casting`);
+}
+
 export async function eliminarTalento(proyectoId: string, talentoId: string) {
   const supabase = await createClient();
   await supabase.from("talento").delete().eq("id", talentoId);

@@ -27,6 +27,7 @@ import {
   actualizarNoDisponibleCrew,
   agregarTalento,
   eliminarTalento,
+  actualizarTalentoBasico,
   actualizarLlamadoTalento,
   actualizarNoSeOcupaTalento,
 } from "./actions";
@@ -34,6 +35,7 @@ import CeldaEditable from "./CeldaEditable";
 import ArteDeToma from "./ArteDeToma";
 import PlanRodajePdfBoton from "./PlanRodajePdfBoton";
 import HojaLlamadoPdfBoton from "./HojaLlamadoPdfBoton";
+import HojaLlamadoIndividualPdfBoton from "./HojaLlamadoIndividualPdfBoton";
 import { colorEscena, LEYENDA_COLORES } from "./colorEscena";
 
 export type RenglonPlan =
@@ -256,13 +258,55 @@ export default function PlanRodajeView({
           </summary>
           <div className="mt-3 grid gap-1.5">
             {talento.map((t) => (
-              <div key={t.id} className="flex items-center justify-between gap-2 rounded bg-neutral-50 px-2 py-1.5 text-xs">
-                <span>
-                  <b>{t.personaje || "Sin personaje"}</b> — {t.nombre} {t.telefono ? `(${t.telefono})` : ""}
-                </span>
-                <form action={eliminarTalento.bind(null, proyectoId, t.id)}>
-                  <button className="text-neutral-300 hover:text-rojo">✕</button>
-                </form>
+              <div key={t.id} className="rounded bg-neutral-50 px-2 py-1.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span>
+                    <b>{t.personaje || "Sin personaje"}</b> — {t.nombre} {t.telefono ? `(${t.telefono})` : ""}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <HojaLlamadoIndividualPdfBoton
+                      proyectoNombre={proyectoNombre}
+                      logoUrl={logoUrl}
+                      colorPrimario={colorPrimario}
+                      talento={t}
+                      dias={dias}
+                      talentoLlamados={talentoLlamados.filter((tl) => tl.talento_id === t.id)}
+                    />
+                    <form action={eliminarTalento.bind(null, proyectoId, t.id)}>
+                      <button className="text-neutral-300 hover:text-rojo">✕</button>
+                    </form>
+                  </div>
+                </div>
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-[0.65rem] text-neutral-400 hover:text-negro">Editar</summary>
+                  <form
+                    action={actualizarTalentoBasico.bind(null, proyectoId, t.id)}
+                    className="mt-1.5 grid grid-cols-3 gap-1.5"
+                  >
+                    <input
+                      name="personaje"
+                      defaultValue={t.personaje ?? ""}
+                      placeholder="Personaje"
+                      className="rounded border border-neutral-300 px-2 py-1"
+                    />
+                    <input
+                      name="nombre"
+                      defaultValue={t.nombre}
+                      required
+                      placeholder="Nombre del actor/actriz"
+                      className="rounded border border-neutral-300 px-2 py-1"
+                    />
+                    <input
+                      name="telefono"
+                      defaultValue={t.telefono ?? ""}
+                      placeholder="Teléfono"
+                      className="rounded border border-neutral-300 px-2 py-1"
+                    />
+                    <button className="col-span-3 rounded bg-neutral-800 py-1 text-[0.65rem] font-semibold text-hueso">
+                      Guardar
+                    </button>
+                  </form>
+                </details>
               </div>
             ))}
           </div>
