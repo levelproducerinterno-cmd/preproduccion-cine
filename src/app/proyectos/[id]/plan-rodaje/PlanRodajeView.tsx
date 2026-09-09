@@ -38,6 +38,7 @@ import PlanRodajePdfBoton from "./PlanRodajePdfBoton";
 import HojaLlamadoPdfBoton from "./HojaLlamadoPdfBoton";
 import HojaLlamadoIndividualPdfBoton from "./HojaLlamadoIndividualPdfBoton";
 import FotosVestuarioTalento from "./FotosVestuarioTalento";
+import ReordenarDiasBoton from "./ReordenarDiasBoton";
 import { colorEscena, LEYENDA_COLORES } from "./colorEscena";
 
 export type RenglonPlan =
@@ -141,6 +142,16 @@ export default function PlanRodajeView({
           />
         )}
       </div>
+
+      {esAdOProduccion && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-neutral-500">
+            Si cambiaste las fechas y ya no coinciden con &quot;Día 1, Día 2...&quot;, usa este botón para
+            renumerarlos según su fecha (las escenas ya asignadas se mueven con su día).
+          </p>
+          <ReordenarDiasBoton proyectoId={proyectoId} />
+        </div>
+      )}
 
       {esAdOProduccion && (
         <div className="grid gap-3 sm:grid-cols-2">

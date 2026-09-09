@@ -44,6 +44,21 @@ export async function eliminarDiaRodaje(proyectoId: string, diaId: string) {
   revalidatePath(ruta(proyectoId));
 }
 
+// Cuando se cambian las fechas de los días de rodaje y dejan de coincidir con
+// el orden de "Día 1, Día 2...", esto vuelve a numerarlos según su fecha (el
+// más próximo queda Día 1) y actualiza las escenas ya asignadas a cada día
+// para que sigan apuntando al día correcto.
+export async function reordenarDiasPorFecha(proyectoId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reordenar_dias_rodaje_por_fecha", { p_proyecto_id: proyectoId });
+  if (error) {
+    console.error(error);
+    return { error: error.message };
+  }
+  revalidatePath(ruta(proyectoId));
+  return { error: null };
+}
+
 export async function asignarEscenaADia(
   proyectoId: string,
   escenaId: string,
