@@ -18,16 +18,20 @@ export default function FotosTalento({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0];
     if (!archivo) return;
     setSubiendo(true);
+    setError(null);
     const supabase = createClient();
     const path = `${proyectoId}/${talentoId}/${Date.now()}-${archivo.name}`;
-    const { error } = await supabase.storage.from("casting").upload(path, archivo);
-    if (!error) {
+    const { error: errorSubida } = await supabase.storage.from("casting").upload(path, archivo);
+    if (errorSubida) {
+      setError(errorSubida.message || "No se pudo subir la foto.");
+    } else {
       const { data } = supabase.storage.from("casting").getPublicUrl(path);
       startTransition(() => agregarFotoTalento(proyectoId, talentoId, data.publicUrl));
     }
@@ -63,6 +67,7 @@ export default function FotosTalento({
           >
             {subiendo ? "Subiendo..." : "+ Foto"}
           </button>
+          {error && <p className="text-[0.6rem] text-rojo">{error}</p>}
         </>
       )}
     </div>
