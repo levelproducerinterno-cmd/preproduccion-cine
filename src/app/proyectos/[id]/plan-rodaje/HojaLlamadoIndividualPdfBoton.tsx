@@ -25,6 +25,21 @@ function ajustarACaja(natural: { w: number; h: number }, maxAncho: number, maxAl
   return { ancho, alto };
 }
 
+// Interpreta textos de hora sueltos ("9:00", "9:00 AM", "21:00", "6.30 p.m.")
+// como minutos desde medianoche. Devuelve null si no se puede interpretar.
+function horaAMinutos(texto: string | null | undefined): number | null {
+  if (!texto) return null;
+  const match = texto.trim().toLowerCase().match(/(\d{1,2})[:.]?(\d{2})?\s*(a\.?\s*m\.?|p\.?\s*m\.?)?/);
+  if (!match) return null;
+  let horas = parseInt(match[1], 10);
+  const minutos = match[2] ? parseInt(match[2], 10) : 0;
+  if (isNaN(horas) || horas > 23 || minutos > 59) return null;
+  const ampm = match[3]?.replace(/[.\s]/g, "");
+  if (ampm === "pm" && horas < 12) horas += 12;
+  if (ampm === "am" && horas === 12) horas = 0;
+  return horas * 60 + minutos;
+}
+
 export default function HojaLlamadoIndividualPdfBoton({
   proyectoNombre,
   logoUrl,
@@ -110,42 +125,60 @@ export default function HojaLlamadoIndividualPdfBoton({
     for (const d of diasConLlamado) {
       const ll = llamadoPorDia.get(d.id)!;
       const fotosDia = fotosVestuario.filter((f) => f.dia_rodaje_id === d.id);
-      const renglones = renglonesPorDia[d.id] ?? [];
+      const renglonesDelDia = renglonesPorDia[d.id] ?? [];
+
+      const desde = horaAMinutos(ll.llamado_desde);
+      let hasta = horaAMinutos(ll.llamado_hasta);
+      if (desde !== null && hasta !== null && hasta < desde) hasta += 24 * 60;
+
+      // Solo escenas (no bloques como desayuno/traslado) dentro de su horario
+      // de llamado. Si no se pudo capturar/interpretar el horario, se muestra
+      // todo el día para no ocultar información por un formato raro.
+      const escenasEnHorario =
+        desde !== null && hasta !== null
+          ? renglonesDelDia.filter((r) => {
+              if (r.tipo !== "toma") return false;
+              const hora = horaAMinutos(r.toma.hora_inicio);
+              return hora !== null && hora >= desde && hora <= hasta;
+            })
+          : renglonesDelDia.filter((r) => r.tipo === "toma");
 
       if (y > 240) {
         doc.addPage();
         y = 20;
       }
 
-      if (renglones.length > 0) {
-        doc.setFontSize(9.5);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0);
-        doc.text(`Día ${d.numero} — Qué se rueda`, 14, y);
-        y += 5;
+      doc.setFontSize(9.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(`Día ${d.numero} — Qué se rueda en su horario`, 14, y);
+      y += 5;
 
+      if (escenasEnHorario.length > 0) {
         autoTable(doc, {
           startY: y,
-          head: [["Hora", "Descripción"]],
-          body: renglones.map((r) => [
-            r.tipo === "bloque" ? r.hora ?? "" : r.toma.hora_inicio ?? "",
-            r.tipo === "bloque"
-              ? r.descripcion
-              : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-",
-          ]),
+          head: [["Hora", "Escena"]],
+          body: escenasEnHorario.map((r) =>
+            r.tipo === "toma"
+              ? [
+                  r.toma.hora_inicio ?? "-",
+                  `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-",
+                ]
+              : ["", ""]
+          ),
           theme: "grid",
           styles: { fontSize: 8, cellPadding: 1.5 },
           headStyles: { fillColor: [10, 9, 8], textColor: 255 },
           margin: { left: 14, right: 14 },
-          didParseCell: (data) => {
-            if (data.section === "body" && renglones[data.row.index]?.tipo === "bloque") {
-              data.cell.styles.fontStyle = "bold";
-              data.cell.styles.fillColor = [225, 225, 225];
-            }
-          },
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         y = (doc as any).lastAutoTable.finalY + 6;
+      } else {
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(120);
+        doc.text("Sin escenas capturadas en el Plan de Rodaje para su horario.", 14, y);
+        y += 7;
       }
 
       if (!ll.indicaciones && fotosDia.length === 0) continue;
