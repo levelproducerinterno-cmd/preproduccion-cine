@@ -277,6 +277,7 @@ export default function PlanRodajeView({
                       dias={dias}
                       talentoLlamados={talentoLlamados.filter((tl) => tl.talento_id === t.id)}
                       fotosVestuario={fotosVestuario.filter((f) => f.talento_id === t.id)}
+                      renglonesPorDia={renglonesPorDia}
                     />
                     <form action={eliminarTalento.bind(null, proyectoId, t.id)}>
                       <button className="text-neutral-300 hover:text-rojo">✕</button>

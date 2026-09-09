@@ -3,6 +3,27 @@
 import { useState } from "react";
 import type { DiaRodaje, DiaRodajeTalentoLlamado, DiaRodajeTalentoFoto, Talento } from "@/lib/types";
 import { crearDocumentoConMachote, finalizarConPiePagina, imagenUrlABase64 } from "@/lib/pdf-machote";
+import type { RenglonPlan } from "./PlanRodajeView";
+
+function dimensionesDeImagen(dataUrl: string): Promise<{ w: number; h: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+function ajustarACaja(natural: { w: number; h: number }, maxAncho: number, maxAlto: number) {
+  const proporcion = natural.w / natural.h;
+  let ancho = maxAncho;
+  let alto = ancho / proporcion;
+  if (alto > maxAlto) {
+    alto = maxAlto;
+    ancho = alto * proporcion;
+  }
+  return { ancho, alto };
+}
 
 export default function HojaLlamadoIndividualPdfBoton({
   proyectoNombre,
@@ -12,6 +33,7 @@ export default function HojaLlamadoIndividualPdfBoton({
   dias,
   talentoLlamados,
   fotosVestuario,
+  renglonesPorDia,
 }: {
   proyectoNombre: string;
   logoUrl: string | null;
@@ -20,6 +42,7 @@ export default function HojaLlamadoIndividualPdfBoton({
   dias: DiaRodaje[];
   talentoLlamados: DiaRodajeTalentoLlamado[];
   fotosVestuario: DiaRodajeTalentoFoto[];
+  renglonesPorDia: Record<string, RenglonPlan[]>;
 }) {
   const [cargando, setCargando] = useState(false);
 
@@ -87,6 +110,44 @@ export default function HojaLlamadoIndividualPdfBoton({
     for (const d of diasConLlamado) {
       const ll = llamadoPorDia.get(d.id)!;
       const fotosDia = fotosVestuario.filter((f) => f.dia_rodaje_id === d.id);
+      const renglones = renglonesPorDia[d.id] ?? [];
+
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      }
+
+      if (renglones.length > 0) {
+        doc.setFontSize(9.5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0);
+        doc.text(`Día ${d.numero} — Qué se rueda`, 14, y);
+        y += 5;
+
+        autoTable(doc, {
+          startY: y,
+          head: [["Hora", "Descripción"]],
+          body: renglones.map((r) => [
+            r.tipo === "bloque" ? r.hora ?? "" : r.toma.hora_inicio ?? "",
+            r.tipo === "bloque"
+              ? r.descripcion
+              : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-",
+          ]),
+          theme: "grid",
+          styles: { fontSize: 8, cellPadding: 1.5 },
+          headStyles: { fillColor: [10, 9, 8], textColor: 255 },
+          margin: { left: 14, right: 14 },
+          didParseCell: (data) => {
+            if (data.section === "body" && renglones[data.row.index]?.tipo === "bloque") {
+              data.cell.styles.fontStyle = "bold";
+              data.cell.styles.fillColor = [225, 225, 225];
+            }
+          },
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        y = (doc as any).lastAutoTable.finalY + 6;
+      }
+
       if (!ll.indicaciones && fotosDia.length === 0) continue;
 
       if (y > 250) {
@@ -110,28 +171,34 @@ export default function HojaLlamadoIndividualPdfBoton({
       }
 
       if (fotosDia.length > 0) {
-        const tam = 28;
+        const cajaMax = 30;
         let x = 14;
+        let alturaFila = 0;
         for (const f of fotosDia) {
           const dataUrl = await imagenUrlABase64(f.url);
           if (!dataUrl) continue;
-          if (x + tam > 196) {
+          const natural = await dimensionesDeImagen(dataUrl);
+          const { ancho, alto } = natural ? ajustarACaja(natural, cajaMax, cajaMax) : { ancho: cajaMax, alto: cajaMax };
+          if (x + ancho > 196) {
             x = 14;
-            y += tam + 3;
+            y += alturaFila + 3;
+            alturaFila = 0;
           }
-          if (y + tam > 280) {
+          if (y + alto > 280) {
             doc.addPage();
             y = 20;
             x = 14;
+            alturaFila = 0;
           }
           try {
-            doc.addImage(dataUrl, x, y, tam, tam);
+            doc.addImage(dataUrl, x, y, ancho, alto);
           } catch {
             // formato no soportado, se omite
           }
-          x += tam + 3;
+          x += ancho + 3;
+          alturaFila = Math.max(alturaFila, alto);
         }
-        y += tam + 6;
+        y += alturaFila + 6;
       } else {
         y += 4;
       }
