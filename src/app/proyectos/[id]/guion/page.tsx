@@ -1,10 +1,11 @@
 import { getProyectoContext } from "@/lib/proyecto-context";
 import { crearGuion } from "./actions";
 import GuionEditor from "./GuionEditor";
+import GuionPdfBoton from "./GuionPdfBoton";
 
 export default async function GuionPage(props: { params: Promise<{ id: string }> }) {
   const { id: proyectoId } = await props.params;
-  const { supabase, miDepartamentos } = await getProyectoContext(proyectoId);
+  const { supabase, proyecto, miDepartamentos } = await getProyectoContext(proyectoId);
   const puedeEditar = miDepartamentos.includes("Dirección/AD");
 
   const { data: guion } = await supabase
@@ -38,12 +39,22 @@ export default async function GuionPage(props: { params: Promise<{ id: string }>
     .eq("guion_id", guion.id);
 
   return (
-    <GuionEditor
-      proyectoId={proyectoId}
-      guionId={guion.id}
-      contenidoInicial={guion.contenido ?? ""}
-      puedeEditar={puedeEditar}
-      numEscenas={count ?? 0}
-    />
+    <div className="grid gap-4">
+      <div className="flex justify-end">
+        <GuionPdfBoton
+          proyectoNombre={proyecto.nombre}
+          logoUrl={proyecto.logo_url}
+          colorPrimario={proyecto.color_primario}
+          contenido={guion.contenido ?? ""}
+        />
+      </div>
+      <GuionEditor
+        proyectoId={proyectoId}
+        guionId={guion.id}
+        contenidoInicial={guion.contenido ?? ""}
+        puedeEditar={puedeEditar}
+        numEscenas={count ?? 0}
+      />
+    </div>
   );
 }
