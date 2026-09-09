@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 import { agregarToma } from "./actions";
 
 const OTRO = "__otro__";
@@ -102,7 +103,7 @@ export default function TomaForm({ proyectoId, escenaId }: { proyectoId: string;
     startTransition(async () => {
       if (archivo) {
         const supabase = createClient();
-        const path = `${escenaId}/${Date.now()}-${archivo.name}`;
+        const path = `${escenaId}/${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
         const { error } = await supabase.storage.from("shotlist").upload(path, archivo);
         if (!error) {
           const { data } = supabase.storage.from("shotlist").getPublicUrl(path);

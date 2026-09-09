@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 import { agregarFotoTalento, eliminarFotoTalento } from "./actions";
 import type { TalentoFoto } from "@/lib/types";
 
@@ -27,7 +28,7 @@ export default function FotosTalento({
     setSubiendo(true);
     setError(null);
     const supabase = createClient();
-    const path = `${proyectoId}/${talentoId}/${Date.now()}-${archivo.name}`;
+    const path = `${proyectoId}/${talentoId}/${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
     const { error: errorSubida } = await supabase.storage.from("casting").upload(path, archivo);
     if (errorSubida) {
       setError(errorSubida.message || "No se pudo subir la foto.");

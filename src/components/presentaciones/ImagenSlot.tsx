@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 
 export default function ImagenSlot({
   proyectoId,
@@ -26,7 +27,7 @@ export default function ImagenSlot({
     if (!archivo) return;
     setSubiendo(true);
     const supabase = createClient();
-    const path = `${proyectoId}/${carpeta}/${Date.now()}-${archivo.name}`;
+    const path = `${proyectoId}/${carpeta}/${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
     const { error } = await supabase.storage.from("presentaciones").upload(path, archivo);
     if (!error) {
       const { data } = supabase.storage.from("presentaciones").getPublicUrl(path);

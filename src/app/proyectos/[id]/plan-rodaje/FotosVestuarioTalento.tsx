@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 import { agregarFotoVestuarioTalento, eliminarFotoVestuarioTalento } from "./actions";
 import type { DiaRodajeTalentoFoto } from "@/lib/types";
 
@@ -29,7 +30,7 @@ export default function FotosVestuarioTalento({
     setSubiendo(true);
     setError(null);
     const supabase = createClient();
-    const path = `vestuario/${diaRodajeId}/${talentoId}/${Date.now()}-${archivo.name}`;
+    const path = `vestuario/${diaRodajeId}/${talentoId}/${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
     const { error: errorSubida } = await supabase.storage.from("casting").upload(path, archivo);
     if (errorSubida) {
       setError(errorSubida.message || "No se pudo subir la foto.");

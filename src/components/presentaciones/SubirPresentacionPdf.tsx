@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 import { guardarPresentacionPdf, quitarPresentacionPdf } from "@/app/proyectos/[id]/presentaciones/actions";
 
 export default function SubirPresentacionPdf({
@@ -26,7 +27,7 @@ export default function SubirPresentacionPdf({
     if (!archivo) return;
     setSubiendo(true);
     const supabase = createClient();
-    const path = `${proyectoId}/pdf-${departamentoId}/${Date.now()}-${archivo.name}`;
+    const path = `${proyectoId}/pdf-${departamentoId}/${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
     const { error } = await supabase.storage.from("presentaciones").upload(path, archivo);
     if (!error) {
       const { data } = supabase.storage.from("presentaciones").getPublicUrl(path);

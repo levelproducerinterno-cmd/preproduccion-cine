@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 import { actualizarLogo } from "./actions";
 
 export default function LogoUpload({ proyectoId, logoActual }: { proyectoId: string; logoActual: string | null }) {
@@ -15,7 +16,7 @@ export default function LogoUpload({ proyectoId, logoActual }: { proyectoId: str
     if (!archivo) return;
     setSubiendo(true);
     const supabase = createClient();
-    const path = `${proyectoId}/${Date.now()}-${archivo.name}`;
+    const path = `${proyectoId}/${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
     const { error } = await supabase.storage.from("marca").upload(path, archivo);
     if (!error) {
       const { data } = supabase.storage.from("marca").getPublicUrl(path);

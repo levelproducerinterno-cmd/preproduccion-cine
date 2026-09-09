@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizarNombreArchivo } from "@/lib/storage-utils";
 import { actualizarFirma } from "./actions";
 
 export default function FirmaUpload({ proyectoId, firmaActual }: { proyectoId: string; firmaActual: string | null }) {
@@ -14,7 +15,7 @@ export default function FirmaUpload({ proyectoId, firmaActual }: { proyectoId: s
     if (!archivo) return;
     setSubiendo(true);
     const supabase = createClient();
-    const path = `${proyectoId}/firma-${Date.now()}-${archivo.name}`;
+    const path = `${proyectoId}/firma-${Date.now()}-${sanitizarNombreArchivo(archivo.name)}`;
     const { error } = await supabase.storage.from("marca").upload(path, archivo);
     if (!error) {
       const { data } = supabase.storage.from("marca").getPublicUrl(path);
