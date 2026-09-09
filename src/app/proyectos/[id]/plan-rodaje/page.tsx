@@ -8,6 +8,7 @@ import type {
   DiaRodajeCrewLlamado,
   Talento,
   DiaRodajeTalentoLlamado,
+  DiaRodajeTalentoFoto,
   ArteDeEscena,
 } from "@/lib/types";
 import PlanRodajeView, { type RenglonPlan, type CrewParaLlamado } from "./PlanRodajeView";
@@ -93,9 +94,16 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
 
   const { data: talentoLlamadosRaw } = await supabase
     .from("dia_rodaje_talento_llamados")
-    .select("id, dia_rodaje_id, talento_id, llamado_desde, llamado_hasta, locacion_url, no_se_ocupa")
+    .select("id, dia_rodaje_id, talento_id, llamado_desde, llamado_hasta, locacion_url, no_se_ocupa, indicaciones")
     .in("dia_rodaje_id", diaIds);
   const talentoLlamados = (talentoLlamadosRaw ?? []) as DiaRodajeTalentoLlamado[];
+
+  const { data: fotosVestuarioRaw } = await supabase
+    .from("dia_rodaje_talento_fotos")
+    .select("id, dia_rodaje_id, talento_id, url, orden")
+    .in("dia_rodaje_id", diaIds)
+    .order("orden");
+  const fotosVestuario = (fotosVestuarioRaw ?? []) as DiaRodajeTalentoFoto[];
 
   const { data: crewRaw } = await supabase
     .from("proyecto_crew")
@@ -164,6 +172,7 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
       crewLlamados={crewLlamados}
       talento={talento}
       talentoLlamados={talentoLlamados}
+      fotosVestuario={fotosVestuario}
     />
   );
 }

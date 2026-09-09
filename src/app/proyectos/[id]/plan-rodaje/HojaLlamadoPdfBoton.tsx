@@ -103,15 +103,16 @@ export default function HojaLlamadoPdfBoton({
       if (talento.length > 0) {
         autoTable(doc, {
           startY: y,
-          head: [["Personaje", "Nombre", "Llamado", "Locación"]],
+          head: [["Personaje", "Nombre", "Llamado", "Locación", "Indicaciones"]],
           body: talento.map((t) => {
             const ll = llamadoPorTalento.get(t.id);
-            if (ll?.no_se_ocupa) return [t.personaje ?? "-", t.nombre, "No se ocupa", "-"];
+            if (ll?.no_se_ocupa) return [t.personaje ?? "-", t.nombre, "No se ocupa", "-", "-"];
             return [
               t.personaje ?? "-",
               t.nombre,
               `${ll?.llamado_desde ?? "-"} - ${ll?.llamado_hasta ?? "-"}`,
               ll?.locacion_url ?? "-",
+              ll?.indicaciones ?? "-",
             ];
           }),
           theme: "grid",

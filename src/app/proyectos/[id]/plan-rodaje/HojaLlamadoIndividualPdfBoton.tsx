@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { DiaRodaje, DiaRodajeTalentoLlamado, Talento } from "@/lib/types";
-import { crearDocumentoConMachote, finalizarConPiePagina } from "@/lib/pdf-machote";
+import type { DiaRodaje, DiaRodajeTalentoLlamado, DiaRodajeTalentoFoto, Talento } from "@/lib/types";
+import { crearDocumentoConMachote, finalizarConPiePagina, imagenUrlABase64 } from "@/lib/pdf-machote";
 
 export default function HojaLlamadoIndividualPdfBoton({
   proyectoNombre,
@@ -11,6 +11,7 @@ export default function HojaLlamadoIndividualPdfBoton({
   talento,
   dias,
   talentoLlamados,
+  fotosVestuario,
 }: {
   proyectoNombre: string;
   logoUrl: string | null;
@@ -18,6 +19,7 @@ export default function HojaLlamadoIndividualPdfBoton({
   talento: Pick<Talento, "nombre" | "personaje" | "telefono">;
   dias: DiaRodaje[];
   talentoLlamados: DiaRodajeTalentoLlamado[];
+  fotosVestuario: DiaRodajeTalentoFoto[];
 }) {
   const [cargando, setCargando] = useState(false);
 
@@ -73,10 +75,66 @@ export default function HojaLlamadoIndividualPdfBoton({
         headStyles: { fillColor: [10, 9, 8], textColor: 255 },
         margin: { left: 14, right: 14 },
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 8;
     } else {
       doc.setFontSize(10);
       doc.setTextColor(120);
       doc.text("Todavía no hay llamados capturados para este personaje.", 14, y);
+      y += 8;
+    }
+
+    for (const d of diasConLlamado) {
+      const ll = llamadoPorDia.get(d.id)!;
+      const fotosDia = fotosVestuario.filter((f) => f.dia_rodaje_id === d.id);
+      if (!ll.indicaciones && fotosDia.length === 0) continue;
+
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(9.5);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(`Día ${d.numero} — Indicaciones / Vestuario`, 14, y);
+      y += 5;
+
+      if (ll.indicaciones) {
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(70);
+        const lineas = doc.splitTextToSize(ll.indicaciones, 180);
+        doc.text(lineas, 14, y);
+        y += lineas.length * 4 + 2;
+      }
+
+      if (fotosDia.length > 0) {
+        const tam = 28;
+        let x = 14;
+        for (const f of fotosDia) {
+          const dataUrl = await imagenUrlABase64(f.url);
+          if (!dataUrl) continue;
+          if (x + tam > 196) {
+            x = 14;
+            y += tam + 3;
+          }
+          if (y + tam > 280) {
+            doc.addPage();
+            y = 20;
+            x = 14;
+          }
+          try {
+            doc.addImage(dataUrl, x, y, tam, tam);
+          } catch {
+            // formato no soportado, se omite
+          }
+          x += tam + 3;
+        }
+        y += tam + 6;
+      } else {
+        y += 4;
+      }
     }
 
     await finalizarConPiePagina(doc);

@@ -275,7 +275,7 @@ export async function actualizarLlamadoTalento(
   proyectoId: string,
   diaRodajeId: string,
   talentoId: string,
-  campo: "llamado_desde" | "llamado_hasta" | "locacion_url",
+  campo: "llamado_desde" | "llamado_hasta" | "locacion_url" | "indicaciones",
   valor: string
 ) {
   const supabase = await createClient();
@@ -298,5 +298,22 @@ export async function actualizarLlamadoTalento(
       [campo]: valor || null,
     });
   }
+  revalidatePath(ruta(proyectoId));
+}
+
+export async function agregarFotoVestuarioTalento(
+  proyectoId: string,
+  diaRodajeId: string,
+  talentoId: string,
+  url: string
+) {
+  const supabase = await createClient();
+  await supabase.from("dia_rodaje_talento_fotos").insert({ dia_rodaje_id: diaRodajeId, talento_id: talentoId, url });
+  revalidatePath(ruta(proyectoId));
+}
+
+export async function eliminarFotoVestuarioTalento(proyectoId: string, fotoId: string) {
+  const supabase = await createClient();
+  await supabase.from("dia_rodaje_talento_fotos").delete().eq("id", fotoId);
   revalidatePath(ruta(proyectoId));
 }

@@ -77,6 +77,15 @@ export type DiaRodajeTalentoLlamado = {
   llamado_hasta: string | null;
   locacion_url: string | null;
   no_se_ocupa: boolean;
+  indicaciones: string | null;
+};
+
+export type DiaRodajeTalentoFoto = {
+  id: string;
+  dia_rodaje_id: string;
+  talento_id: string;
+  url: string;
+  orden: number;
 };
 
 export type Persona = {

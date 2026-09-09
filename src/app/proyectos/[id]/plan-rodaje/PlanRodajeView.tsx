@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { Fragment, useEffect, useState, useTransition } from "react";
 import type {
   DiaRodaje,
   Escena,
@@ -9,6 +9,7 @@ import type {
   DiaRodajeCrewLlamado,
   Talento,
   DiaRodajeTalentoLlamado,
+  DiaRodajeTalentoFoto,
   ArteDeEscena,
 } from "@/lib/types";
 import {
@@ -36,6 +37,7 @@ import ArteDeToma from "./ArteDeToma";
 import PlanRodajePdfBoton from "./PlanRodajePdfBoton";
 import HojaLlamadoPdfBoton from "./HojaLlamadoPdfBoton";
 import HojaLlamadoIndividualPdfBoton from "./HojaLlamadoIndividualPdfBoton";
+import FotosVestuarioTalento from "./FotosVestuarioTalento";
 import { colorEscena, LEYENDA_COLORES } from "./colorEscena";
 
 export type RenglonPlan =
@@ -70,6 +72,7 @@ export default function PlanRodajeView({
   crewLlamados,
   talento,
   talentoLlamados,
+  fotosVestuario,
 }: {
   proyectoId: string;
   proyectoNombre: string;
@@ -89,6 +92,7 @@ export default function PlanRodajeView({
   crewLlamados: DiaRodajeCrewLlamado[];
   talento: Talento[];
   talentoLlamados: DiaRodajeTalentoLlamado[];
+  fotosVestuario: DiaRodajeTalentoFoto[];
 }) {
   const [vista, setVista] = useState<"plan" | "llamado">("plan");
   const [, startTransition] = useTransition();
@@ -246,6 +250,7 @@ export default function PlanRodajeView({
             crewLlamados={crewLlamados.filter((c) => c.dia_rodaje_id === dia.id)}
             talento={talento}
             talentoLlamados={talentoLlamados.filter((t) => t.dia_rodaje_id === dia.id)}
+            fotosVestuario={fotosVestuario.filter((f) => f.dia_rodaje_id === dia.id)}
             esAdOProduccion={esAdOProduccion}
           />
         )
@@ -271,6 +276,7 @@ export default function PlanRodajeView({
                       talento={t}
                       dias={dias}
                       talentoLlamados={talentoLlamados.filter((tl) => tl.talento_id === t.id)}
+                      fotosVestuario={fotosVestuario.filter((f) => f.talento_id === t.id)}
                     />
                     <form action={eliminarTalento.bind(null, proyectoId, t.id)}>
                       <button className="text-neutral-300 hover:text-rojo">✕</button>
@@ -609,6 +615,7 @@ function DiaHojaLlamado({
   crewLlamados,
   talento,
   talentoLlamados,
+  fotosVestuario,
   esAdOProduccion,
 }: {
   proyectoId: string;
@@ -619,11 +626,16 @@ function DiaHojaLlamado({
   crewLlamados: DiaRodajeCrewLlamado[];
   talento: Talento[];
   talentoLlamados: DiaRodajeTalentoLlamado[];
+  fotosVestuario: DiaRodajeTalentoFoto[];
   esAdOProduccion: boolean;
 }) {
   const [, startTransition] = useTransition();
   const llamadoPorCrew = new Map(crewLlamados.map((c) => [c.proyecto_crew_id, c]));
   const llamadoPorTalento = new Map(talentoLlamados.map((t) => [t.talento_id, t]));
+  const fotosPorTalento = new Map<string, DiaRodajeTalentoFoto[]>();
+  for (const f of fotosVestuario) {
+    fotosPorTalento.set(f.talento_id, [...(fotosPorTalento.get(f.talento_id) ?? []), f]);
+  }
 
   return (
     <details open className="rounded-lg border border-neutral-200 bg-white shadow-sm">
@@ -783,7 +795,8 @@ function DiaHojaLlamado({
                   const ll = llamadoPorTalento.get(t.id);
                   const noSeOcupa = ll?.no_se_ocupa ?? false;
                   return (
-                    <tr key={t.id} className={noSeOcupa ? "bg-neutral-100 text-neutral-400" : ""}>
+                    <Fragment key={t.id}>
+                    <tr className={noSeOcupa ? "bg-neutral-100 text-neutral-400" : ""}>
                       <td className={td}>{t.personaje || "-"}</td>
                       <td className={td}>{t.nombre}</td>
                       <td className={td}>
@@ -840,6 +853,37 @@ function DiaHojaLlamado({
                         )}
                       </td>
                     </tr>
+                    {!noSeOcupa && (
+                      <tr>
+                        <td className={td} colSpan={5}>
+                          <details>
+                            <summary className="cursor-pointer text-[0.65rem] font-semibold text-neutral-400 hover:text-negro">
+                              Indicaciones / Vestuario{ll?.indicaciones ? ` — ${ll.indicaciones}` : ""}
+                            </summary>
+                            <div className="mt-2 grid gap-2">
+                              {esAdOProduccion ? (
+                                <CeldaEditable
+                                  valorInicial={ll?.indicaciones ?? ""}
+                                  placeholder="Ej. Traje azul, sin corbata, referencia abajo..."
+                                  onGuardar={(v) => startTransition(() => actualizarLlamadoTalento(proyectoId, dia.id, t.id, "indicaciones", v))}
+                                  className="w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-xs"
+                                />
+                              ) : (
+                                <p className="text-xs text-neutral-600">{ll?.indicaciones || "Sin indicaciones."}</p>
+                              )}
+                              <FotosVestuarioTalento
+                                proyectoId={proyectoId}
+                                diaRodajeId={dia.id}
+                                talentoId={t.id}
+                                fotos={fotosPorTalento.get(t.id) ?? []}
+                                puedeEditar={esAdOProduccion}
+                              />
+                            </div>
+                          </details>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })}
                 {talento.length === 0 && (
