@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { DiaRodaje, DiaRodajeTalentoLlamado, DiaRodajeTalentoFoto, Talento } from "@/lib/types";
+import type { DiaRodaje, DiaRodajeTalentoLlamado, DiaRodajeTalentoFoto, DiaRodajeLocacion, Talento } from "@/lib/types";
 import { crearDocumentoConMachote, finalizarConPiePagina, imagenUrlABase64 } from "@/lib/pdf-machote";
 import type { RenglonPlan } from "./PlanRodajeView";
 
@@ -49,6 +49,7 @@ export default function HojaLlamadoIndividualPdfBoton({
   talentoLlamados,
   fotosVestuario,
   renglonesPorDia,
+  locaciones,
 }: {
   proyectoNombre: string;
   logoUrl: string | null;
@@ -58,6 +59,7 @@ export default function HojaLlamadoIndividualPdfBoton({
   talentoLlamados: DiaRodajeTalentoLlamado[];
   fotosVestuario: DiaRodajeTalentoFoto[];
   renglonesPorDia: Record<string, RenglonPlan[]>;
+  locaciones: DiaRodajeLocacion[];
 }) {
   const [cargando, setCargando] = useState(false);
 
@@ -101,11 +103,12 @@ export default function HojaLlamadoIndividualPdfBoton({
         head: [["Día", "Fecha", "Llamado", "Locación"]],
         body: diasConLlamado.map((d) => {
           const ll = llamadoPorDia.get(d.id)!;
+          const locacionesDia = locaciones.filter((l) => l.dia_rodaje_id === d.id);
           return [
             `Día ${d.numero}`,
             d.fecha ?? "-",
             `${ll.llamado_desde ?? "-"} - ${ll.llamado_hasta ?? "-"}`,
-            ll.locacion_url || "-",
+            ll.locacion_url || locacionesDia[0]?.nombre || "-",
           ];
         }),
         theme: "grid",

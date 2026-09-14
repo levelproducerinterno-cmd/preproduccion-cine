@@ -85,7 +85,12 @@ export default function HojaLlamadoPdfBoton({
         body: crew.map((c) => {
           const ll = llamadoPorCrew.get(c.id);
           if (ll?.no_disponible) return [c.puesto_especifico ?? "-", c.personas.nombre, "No disponible", "-"];
-          return [c.puesto_especifico ?? "-", c.personas.nombre, ll?.llamado || dia.llamado_general || "-", ll?.locacion_url ?? "-"];
+          return [
+            c.puesto_especifico ?? "-",
+            c.personas.nombre,
+            ll?.llamado || dia.llamado_general || "-",
+            ll?.locacion_url || locacionesDia[0]?.nombre || "-",
+          ];
         }),
         theme: "grid",
         styles: { fontSize: 7.5, cellPadding: 1.5 },
@@ -111,7 +116,7 @@ export default function HojaLlamadoPdfBoton({
               t.personaje ?? "-",
               t.nombre,
               `${ll?.llamado_desde ?? "-"} - ${ll?.llamado_hasta ?? "-"}`,
-              ll?.locacion_url ?? "-",
+              ll?.locacion_url || locacionesDia[0]?.nombre || "-",
               ll?.indicaciones ?? "-",
             ];
           }),

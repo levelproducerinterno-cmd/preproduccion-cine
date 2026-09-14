@@ -289,6 +289,7 @@ export default function PlanRodajeView({
                       talentoLlamados={talentoLlamados.filter((tl) => tl.talento_id === t.id)}
                       fotosVestuario={fotosVestuario.filter((f) => f.talento_id === t.id)}
                       renglonesPorDia={renglonesPorDia}
+                      locaciones={locaciones}
                     />
                     <form action={eliminarTalento.bind(null, proyectoId, t.id)}>
                       <button className="text-neutral-300 hover:text-rojo">✕</button>
@@ -755,10 +756,11 @@ function DiaHojaLlamado({
                         ) : esAdOProduccion ? (
                           <CeldaEditable
                             valorInicial={ll?.locacion_url ?? ""}
+                            placeholder={locaciones[0]?.nombre ?? locaciones[0]?.url_maps ?? ""}
                             onGuardar={(v) => startTransition(() => actualizarLlamadoCrew(proyectoId, dia.id, c.id, "locacion_url", v))}
                           />
                         ) : (
-                          ll?.locacion_url || "-"
+                          ll?.locacion_url || locaciones[0]?.nombre || "-"
                         )}
                       </td>
                       <td className={td}>
@@ -838,10 +840,11 @@ function DiaHojaLlamado({
                         ) : esAdOProduccion ? (
                           <CeldaEditable
                             valorInicial={ll?.locacion_url ?? ""}
+                            placeholder={locaciones[0]?.nombre ?? locaciones[0]?.url_maps ?? ""}
                             onGuardar={(v) => startTransition(() => actualizarLlamadoTalento(proyectoId, dia.id, t.id, "locacion_url", v))}
                           />
                         ) : (
-                          ll?.locacion_url || "-"
+                          ll?.locacion_url || locaciones[0]?.nombre || "-"
                         )}
                       </td>
                       <td className={td}>
