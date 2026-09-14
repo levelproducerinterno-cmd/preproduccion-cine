@@ -14,6 +14,12 @@ function dimensionesDeImagen(dataUrl: string): Promise<{ w: number; h: number } 
   });
 }
 
+function textoLocacion(valorPropio: string | null | undefined, locacionDia: DiaRodajeLocacion | undefined) {
+  if (valorPropio) return valorPropio;
+  if (!locacionDia) return "-";
+  return locacionDia.url_maps ? `${locacionDia.nombre} (${locacionDia.url_maps})` : locacionDia.nombre;
+}
+
 function ajustarACaja(natural: { w: number; h: number }, maxAncho: number, maxAlto: number) {
   const proporcion = natural.w / natural.h;
   let ancho = maxAncho;
@@ -108,7 +114,7 @@ export default function HojaLlamadoIndividualPdfBoton({
             `Día ${d.numero}`,
             d.fecha ?? "-",
             `${ll.llamado_desde ?? "-"} - ${ll.llamado_hasta ?? "-"}`,
-            ll.locacion_url || locacionesDia[0]?.nombre || "-",
+            textoLocacion(ll.locacion_url, locacionesDia[0]),
           ];
         }),
         theme: "grid",

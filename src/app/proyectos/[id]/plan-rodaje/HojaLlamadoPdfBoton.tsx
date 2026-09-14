@@ -5,6 +5,12 @@ import type { DiaRodaje, DiaRodajeLocacion, DiaRodajeCrewLlamado, Talento, DiaRo
 import type { RenglonPlan, CrewParaLlamado } from "./PlanRodajeView";
 import { crearDocumentoConMachote, finalizarConPiePagina } from "@/lib/pdf-machote";
 
+function textoLocacion(valorPropio: string | null | undefined, locacionDia: DiaRodajeLocacion | undefined) {
+  if (valorPropio) return valorPropio;
+  if (!locacionDia) return "-";
+  return locacionDia.url_maps ? `${locacionDia.nombre} (${locacionDia.url_maps})` : locacionDia.nombre;
+}
+
 export default function HojaLlamadoPdfBoton({
   proyectoNombre,
   logoUrl,
@@ -89,7 +95,7 @@ export default function HojaLlamadoPdfBoton({
             c.puesto_especifico ?? "-",
             c.personas.nombre,
             ll?.llamado || dia.llamado_general || "-",
-            ll?.locacion_url || locacionesDia[0]?.nombre || "-",
+            textoLocacion(ll?.locacion_url, locacionesDia[0]),
           ];
         }),
         theme: "grid",
@@ -116,7 +122,7 @@ export default function HojaLlamadoPdfBoton({
               t.personaje ?? "-",
               t.nombre,
               `${ll?.llamado_desde ?? "-"} - ${ll?.llamado_hasta ?? "-"}`,
-              ll?.locacion_url || locacionesDia[0]?.nombre || "-",
+              textoLocacion(ll?.locacion_url, locacionesDia[0]),
               ll?.indicaciones ?? "-",
             ];
           }),

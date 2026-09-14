@@ -54,6 +54,28 @@ export type CrewParaLlamado = {
 const th = "border border-neutral-700 bg-negro p-2 text-left text-[0.65rem] font-semibold uppercase text-hueso";
 const td = "border border-neutral-200 p-1.5 align-top";
 
+// Muestra la locación propia de la persona si la tiene; si no, cae a la
+// locación general del día (con link de Maps si lo tiene).
+function CeldaLocacion({ valorPropio, locacionDia }: { valorPropio: string | null | undefined; locacionDia: DiaRodajeLocacion | undefined }) {
+  if (valorPropio) {
+    return valorPropio.startsWith("http") ? (
+      <a href={valorPropio} target="_blank" rel="noopener noreferrer" className="text-rojo hover:underline">
+        {valorPropio}
+      </a>
+    ) : (
+      <>{valorPropio}</>
+    );
+  }
+  if (!locacionDia) return <>-</>;
+  return locacionDia.url_maps ? (
+    <a href={locacionDia.url_maps} target="_blank" rel="noopener noreferrer" className="text-rojo hover:underline">
+      {locacionDia.nombre}
+    </a>
+  ) : (
+    <>{locacionDia.nombre}</>
+  );
+}
+
 export default function PlanRodajeView({
   proyectoId,
   proyectoNombre,
@@ -754,13 +776,20 @@ function DiaHojaLlamado({
                         {noDisponible ? (
                           "—"
                         ) : esAdOProduccion ? (
-                          <CeldaEditable
-                            valorInicial={ll?.locacion_url ?? ""}
-                            placeholder={locaciones[0]?.nombre ?? locaciones[0]?.url_maps ?? ""}
-                            onGuardar={(v) => startTransition(() => actualizarLlamadoCrew(proyectoId, dia.id, c.id, "locacion_url", v))}
-                          />
+                          <div className="grid gap-0.5">
+                            <CeldaEditable
+                              valorInicial={ll?.locacion_url ?? ""}
+                              placeholder={locaciones[0]?.nombre ?? locaciones[0]?.url_maps ?? ""}
+                              onGuardar={(v) => startTransition(() => actualizarLlamadoCrew(proyectoId, dia.id, c.id, "locacion_url", v))}
+                            />
+                            {!ll?.locacion_url && locaciones[0] && (
+                              <span className="text-[0.6rem]">
+                                <CeldaLocacion valorPropio={null} locacionDia={locaciones[0]} />
+                              </span>
+                            )}
+                          </div>
                         ) : (
-                          ll?.locacion_url || locaciones[0]?.nombre || "-"
+                          <CeldaLocacion valorPropio={ll?.locacion_url} locacionDia={locaciones[0]} />
                         )}
                       </td>
                       <td className={td}>
@@ -838,13 +867,20 @@ function DiaHojaLlamado({
                         {noSeOcupa ? (
                           "—"
                         ) : esAdOProduccion ? (
-                          <CeldaEditable
-                            valorInicial={ll?.locacion_url ?? ""}
-                            placeholder={locaciones[0]?.nombre ?? locaciones[0]?.url_maps ?? ""}
-                            onGuardar={(v) => startTransition(() => actualizarLlamadoTalento(proyectoId, dia.id, t.id, "locacion_url", v))}
-                          />
+                          <div className="grid gap-0.5">
+                            <CeldaEditable
+                              valorInicial={ll?.locacion_url ?? ""}
+                              placeholder={locaciones[0]?.nombre ?? locaciones[0]?.url_maps ?? ""}
+                              onGuardar={(v) => startTransition(() => actualizarLlamadoTalento(proyectoId, dia.id, t.id, "locacion_url", v))}
+                            />
+                            {!ll?.locacion_url && locaciones[0] && (
+                              <span className="text-[0.6rem]">
+                                <CeldaLocacion valorPropio={null} locacionDia={locaciones[0]} />
+                              </span>
+                            )}
+                          </div>
                         ) : (
-                          ll?.locacion_url || locaciones[0]?.nombre || "-"
+                          <CeldaLocacion valorPropio={ll?.locacion_url} locacionDia={locaciones[0]} />
                         )}
                       </td>
                       <td className={td}>
