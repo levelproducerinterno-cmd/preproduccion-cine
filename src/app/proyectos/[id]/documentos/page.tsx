@@ -52,12 +52,14 @@ export default async function DocumentosPage(props: { params: Promise<{ id: stri
           Tus documentos ({plantillas.length})
         </h2>
         <p className="mb-4 text-xs text-neutral-400">
-          Escribe el texto de tu responsiva/contrato tal como quieres que salga. Puedes usar{" "}
-          <code className="rounded bg-neutral-100 px-1">{"{{nombre}}"}</code> para que se reemplace
-          automáticamente por la persona a la que se lo generes, y{" "}
-          <code className="rounded bg-neutral-100 px-1">{"{{proyecto}}"}</code> por el nombre del proyecto.
-          Todos los documentos llevan el mismo membrete (logo, colores, fecha) y la firma que subiste en
-          Ajustes.
+          Escribe el texto de tu responsiva/contrato tal como quieres que salga. Cualquier{" "}
+          <code className="rounded bg-neutral-100 px-1">{"{{campo}}"}</code> que escribas (ej.{" "}
+          <code className="rounded bg-neutral-100 px-1">{"{{monto}}"}</code>,{" "}
+          <code className="rounded bg-neutral-100 px-1">{"{{fecha}}"}</code>) aparece como un campo para
+          llenar al momento de descargar — si lo dejas vacío, se imprime una línea en blanco.{" "}
+          <code className="rounded bg-neutral-100 px-1">{"{{proyecto}}"}</code> es especial: se llena solo
+          con el nombre del proyecto. Todos los documentos llevan el mismo membrete (logo, colores, fecha)
+          y la firma que subiste en Ajustes.
         </p>
         <div className="grid gap-3">
           {plantillas.map((p) => (

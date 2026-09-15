@@ -1,7 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { crearDocumentoConMachote, finalizarConPiePagina, imagenUrlABase64 } from "@/lib/pdf-machote";
+
+function etiquetaCampo(campo: string) {
+  const texto = campo.replace(/_/g, " ");
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+// Encuentra los {{campo}} del texto, en el orden en que aparecen y sin
+// repetidos. "proyecto" se excluye porque se llena solo con el nombre del
+// proyecto, no hace falta pedirlo.
+function extraerCampos(cuerpo: string) {
+  const encontrados = cuerpo.match(/\{\{\s*[a-z0-9_]+\s*\}\}/gi) ?? [];
+  const nombres = encontrados.map((m) => m.replace(/[{}]/g, "").trim().toLowerCase());
+  const unicos: string[] = [];
+  for (const n of nombres) {
+    if (n !== "proyecto" && !unicos.includes(n)) unicos.push(n);
+  }
+  return unicos;
+}
 
 export default function DocumentoPdfBoton({
   nombrePlantilla,
@@ -20,7 +38,9 @@ export default function DocumentoPdfBoton({
   firmaUrl: string | null;
   nombreResponsable: string | null;
 }) {
-  const [paraQuien, setParaQuien] = useState("");
+  const campos = useMemo(() => extraerCampos(cuerpo), [cuerpo]);
+  const [valores, setValores] = useState<Record<string, string>>({});
+  const [abierto, setAbierto] = useState(false);
   const [cargando, setCargando] = useState(false);
 
   async function descargar() {
@@ -34,21 +54,24 @@ export default function DocumentoPdfBoton({
     });
 
     let y = 42;
-    if (paraQuien.trim()) {
+    const nombreGeneradoPara = valores["nombre"]?.trim() || valores["cliente"]?.trim();
+    if (nombreGeneradoPara) {
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(0);
-      doc.text(`Generado para: ${paraQuien.trim()}`, 14, y);
+      doc.text(`Generado para: ${nombreGeneradoPara}`, 14, y);
       y += 8;
     }
 
-    const cuerpoConNombre = cuerpo
-      .replace(/\{\{\s*nombre\s*\}\}/gi, paraQuien.trim() || "____________________")
-      .replace(/\{\{\s*proyecto\s*\}\}/gi, proyectoNombre);
+    let cuerpoFinal = cuerpo.replace(/\{\{\s*proyecto\s*\}\}/gi, proyectoNombre);
+    for (const campo of campos) {
+      const patron = new RegExp(`\\{\\{\\s*${campo}\\s*\\}\\}`, "gi");
+      cuerpoFinal = cuerpoFinal.replace(patron, valores[campo]?.trim() || "____________________");
+    }
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    const lineas = doc.splitTextToSize(cuerpoConNombre, 182);
+    const lineas = doc.splitTextToSize(cuerpoFinal, 182);
     for (const linea of lineas) {
       if (y > 265) {
         doc.addPage();
@@ -86,14 +109,8 @@ export default function DocumentoPdfBoton({
     setCargando(false);
   }
 
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <input
-        value={paraQuien}
-        onChange={(e) => setParaQuien(e.target.value)}
-        placeholder="Generado para (opcional)"
-        className="rounded border border-neutral-300 px-2 py-1.5 text-xs"
-      />
+  if (campos.length === 0) {
+    return (
       <button
         onClick={descargar}
         disabled={cargando}
@@ -101,6 +118,39 @@ export default function DocumentoPdfBoton({
       >
         {cargando ? "Generando..." : "Descargar PDF"}
       </button>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setAbierto((a) => !a)}
+        className="rounded border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-500 hover:border-rojo hover:text-rojo"
+      >
+        {abierto ? "Ocultar campos" : `Llenar datos y descargar (${campos.length})`}
+      </button>
+      {abierto && (
+        <div className="mt-3 grid gap-2 rounded border border-neutral-100 bg-neutral-50 p-3 sm:grid-cols-2">
+          {campos.map((campo) => (
+            <label key={campo} className="grid gap-0.5 text-xs">
+              <span className="font-semibold text-neutral-600">{etiquetaCampo(campo)}</span>
+              <input
+                value={valores[campo] ?? ""}
+                onChange={(e) => setValores((v) => ({ ...v, [campo]: e.target.value }))}
+                placeholder="Déjalo vacío para imprimir una línea en blanco"
+                className="rounded border border-neutral-300 px-2 py-1.5"
+              />
+            </label>
+          ))}
+          <button
+            onClick={descargar}
+            disabled={cargando}
+            className="col-span-full mt-1 rounded bg-rojo px-3 py-2 text-sm font-semibold text-hueso hover:brightness-110 disabled:opacity-50"
+          >
+            {cargando ? "Generando..." : "Descargar PDF"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

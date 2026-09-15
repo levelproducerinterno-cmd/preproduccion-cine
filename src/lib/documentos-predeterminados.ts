@@ -14,19 +14,19 @@ export const DOCUMENTOS_PREDETERMINADOS: DocumentoPredeterminado[] = [
     nombre: "Contrato de producción con cliente",
     cuerpo: `CONTRATO DE PRESTACIÓN DE SERVICIOS DE PRODUCCIÓN AUDIOVISUAL
 
-Contrato que celebran, por una parte, LEVEL PRODUCER ("LA PRODUCTORA"), representada en este acto por su responsable (firma al calce), y por la otra, {{nombre}} ("EL CLIENTE"), en relación con la producción audiovisual denominada "{{proyecto}}" (el "Proyecto"), al tenor de las siguientes cláusulas:
+Contrato que celebran, por una parte, LEVEL PRODUCER ("LA PRODUCTORA"), representada en este acto por su responsable (firma al calce), y por la otra, {{cliente}} ("EL CLIENTE"), en relación con la producción audiovisual denominada "{{proyecto}}" (el "Proyecto"), al tenor de las siguientes cláusulas:
 
 PRIMERA. OBJETO.
 LA PRODUCTORA se compromete a prestar a EL CLIENTE los servicios de producción audiovisual necesarios para la realización del Proyecto, conforme a lo acordado entre ambas partes previo a la firma del presente contrato (alcance, locaciones, fechas de grabación y entregables).
 
 SEGUNDA. CONTRAPRESTACIÓN Y FORMA DE PAGO.
-El monto total pactado por la prestación de los servicios es de $_________________ M.N., que EL CLIENTE se obliga a cubrir a LA PRODUCTORA de la siguiente forma:
+El monto total pactado por la prestación de los servicios es de \${{monto_total}} M.N., que EL CLIENTE se obliga a cubrir a LA PRODUCTORA de la siguiente forma:
 
-- ____% ($_________________) como anticipo, a más tardar antes de la fecha de grabación agendada.
-- ____% ($_________________) contra la entrega del material final editado.
+- {{porcentaje_anticipo}}% (\${{monto_anticipo}}) como anticipo, a más tardar antes de la fecha de grabación agendada.
+- {{porcentaje_entrega}}% (\${{monto_entrega}}) contra la entrega del material final editado.
 
 TERCERA. FECHA DE ENTREGA.
-LA PRODUCTORA entregará el material final editado dentro de las DOS (2) SEMANAS posteriores a la fecha de grabación, salvo que las partes acuerden un plazo distinto por escrito. Excepción pactada para este Proyecto (si aplica): _________________________________________________
+LA PRODUCTORA entregará el material final editado dentro de las DOS (2) SEMANAS posteriores a la fecha de grabación, salvo que las partes acuerden un plazo distinto por escrito. Excepción pactada para este Proyecto (si aplica): {{excepcion_entrega}}
 
 CUARTA. INCUMPLIMIENTO DE PAGO.
 En caso de que EL CLIENTE no realice el pago conforme a lo pactado en la cláusula SEGUNDA, LA PRODUCTORA tendrá derecho, sin responsabilidad alguna de su parte, a:
@@ -46,17 +46,17 @@ OCTAVA. MODIFICACIONES.
 Cualquier modificación al presente contrato (alcance, fechas, monto) deberá constar por escrito y ser firmada por ambas partes para tener validez.
 
 NOVENA. JURISDICCIÓN.
-Para la interpretación y cumplimiento del presente contrato, las partes se someten a las leyes y tribunales de _________________________________, renunciando a cualquier otro fuero que pudiera corresponderles.
+Para la interpretación y cumplimiento del presente contrato, las partes se someten a las leyes y tribunales de {{ciudad_jurisdiccion}}, renunciando a cualquier otro fuero que pudiera corresponderles.
 
 Leído que fue el presente contrato y enteradas las partes de su contenido y alcance legal, lo firman de conformidad:
 
-Fecha: _________________________________
-Fecha de grabación acordada: _________________________________
+Fecha: {{fecha_firma}}
+Fecha de grabación acordada: {{fecha_grabacion}}
 
 
 POR EL CLIENTE
 
-Nombre completo / Empresa: _________________________________
+Nombre completo / Empresa: {{cliente}}
 
 Firma: _________________________________
 
