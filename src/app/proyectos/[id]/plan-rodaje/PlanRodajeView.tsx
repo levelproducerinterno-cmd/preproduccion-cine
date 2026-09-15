@@ -888,7 +888,9 @@ function DiaHojaLlamado({
                 </tr>
               </thead>
               <tbody>
-                {talento.map((t) => {
+                {talento
+                  .filter((t) => esAdOProduccion || !llamadoPorTalento.get(t.id)?.no_se_ocupa)
+                  .map((t) => {
                   const ll = llamadoPorTalento.get(t.id);
                   const noSeOcupa = ll?.no_se_ocupa ?? false;
                   return (

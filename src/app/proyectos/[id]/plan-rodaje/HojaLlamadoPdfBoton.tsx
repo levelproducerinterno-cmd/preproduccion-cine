@@ -135,13 +135,13 @@ export default function HojaLlamadoPdfBoton({
       }
 
       const llamadoPorTalento = new Map(talentoLlamados.filter((t) => t.dia_rodaje_id === dia.id).map((t) => [t.talento_id, t]));
-      if (incluyeTalento && talento.length > 0) {
+      const talentoDia = talento.filter((t) => !llamadoPorTalento.get(t.id)?.no_se_ocupa);
+      if (incluyeTalento && talentoDia.length > 0) {
         autoTable(doc, {
           startY: y,
           head: [["Personaje", "Nombre", "Llamado", "Locación", "Indicaciones"]],
-          body: talento.map((t) => {
+          body: talentoDia.map((t) => {
             const ll = llamadoPorTalento.get(t.id);
-            if (ll?.no_se_ocupa) return [t.personaje ?? "-", t.nombre, "No se ocupa", "-", "-"];
             return [
               t.personaje ?? "-",
               t.nombre,
@@ -154,10 +154,6 @@ export default function HojaLlamadoPdfBoton({
           styles: { fontSize: 7.5, cellPadding: 1.5 },
           headStyles: { fillColor: [10, 9, 8], textColor: 255 },
           margin: { left: 14, right: 14 },
-          didParseCell: (data) => {
-            const t = talento[data.row.index];
-            if (t && llamadoPorTalento.get(t.id)?.no_se_ocupa) data.cell.styles.textColor = [160, 160, 160];
-          },
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         y = (doc as any).lastAutoTable.finalY + 6;
