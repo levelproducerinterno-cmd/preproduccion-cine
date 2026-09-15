@@ -169,13 +169,16 @@ export default function HojaLlamadoPdfBoton({
       if (renglones.length > 0) {
         autoTable(doc, {
           startY: y,
-          head: [["Hora", "Plan de rodaje"]],
-          body: renglones.map((r) => [
-            r.tipo === "bloque" ? r.hora ?? "" : r.toma.hora_inicio ?? "",
+          head: [["Hora", "Plan de rodaje", "Talento"]],
+          body: renglones.map((r) =>
             r.tipo === "bloque"
-              ? r.descripcion
-              : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-",
-          ]),
+              ? [r.hora ?? "", { content: `${r.descripcion}${r.soloCrew ? " (solo crew)" : ""}`, colSpan: 2 }]
+              : [
+                  r.toma.hora_inicio ?? "-",
+                  `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-",
+                  r.toma.talento_en_toma || r.toma.subject || "-",
+                ]
+          ),
           theme: "grid",
           styles: { fontSize: 7.5, cellPadding: 1.5 },
           headStyles: { fillColor: [10, 9, 8], textColor: 255 },

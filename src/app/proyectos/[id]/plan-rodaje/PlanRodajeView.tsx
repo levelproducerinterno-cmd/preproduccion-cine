@@ -1007,20 +1007,36 @@ function DiaHojaLlamado({
           <h4 className="mb-1 text-xs font-bold uppercase tracking-wide text-neutral-500">Plan de rodaje</h4>
           <div className="overflow-x-auto rounded border border-neutral-100">
             <table className="w-full min-w-[500px] border-collapse text-xs">
+              <thead>
+                <tr>
+                  <th className={th}>Hora</th>
+                  <th className={th}>Descripción</th>
+                  <th className={th}>Talento</th>
+                </tr>
+              </thead>
               <tbody>
-                {renglones.map((r) => (
-                  <tr key={r.id} className={r.tipo === "bloque" ? "bg-neutral-200 font-bold" : ""}>
-                    <td className={`${td} w-28`}>{r.tipo === "bloque" ? r.hora : r.toma.hora_inicio}</td>
-                    <td className={td}>
-                      {r.tipo === "bloque"
-                        ? `${r.descripcion}${r.soloCrew ? " (solo crew)" : ""}`
-                        : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-"}
-                    </td>
-                  </tr>
-                ))}
+                {renglones.map((r) =>
+                  r.tipo === "bloque" ? (
+                    <tr key={r.id} className="bg-neutral-200 font-bold">
+                      <td className={`${td} w-28`}>{r.hora}</td>
+                      <td className={td} colSpan={2}>
+                        {r.descripcion}
+                        {r.soloCrew ? " (solo crew)" : ""}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={r.id}>
+                      <td className={`${td} w-28`}>{r.toma.hora_inicio}</td>
+                      <td className={td}>
+                        {`Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-"}
+                      </td>
+                      <td className={td}>{r.toma.talento_en_toma || r.toma.subject || "-"}</td>
+                    </tr>
+                  )
+                )}
                 {renglones.length === 0 && (
                   <tr>
-                    <td className={td} colSpan={2}>
+                    <td className={td} colSpan={3}>
                       Sin plan capturado.
                     </td>
                   </tr>
