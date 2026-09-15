@@ -44,15 +44,21 @@ function hexARgb(hex: string): [number, number, number] {
   return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
 }
 
-export async function crearDocumentoConMachote(opts: {
-  tituloDocumento: string;
-  proyectoNombre: string;
-  logoUrl?: string | null;
-  colorPrimario?: string;
-}) {
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF();
-
+// Dibuja el encabezado (logo, nombre del proyecto, título del documento,
+// fecha y línea divisoria) en la página actual del doc. Se usa una vez al
+// crear el documento (ver crearDocumentoConMachote) y también se puede
+// volver a llamar en documentos de varias páginas/secciones (ej. una hoja
+// de llamado por día) para repetir el encabezado en cada página en vez de
+// dejar el espacio de arriba en blanco.
+export async function dibujarEncabezado(
+  doc: jsPDF,
+  opts: {
+    tituloDocumento: string;
+    proyectoNombre: string;
+    logoUrl?: string | null;
+    colorPrimario?: string;
+  }
+) {
   let x = 14;
   if (opts.logoUrl) {
     const dataUrl = await imagenUrlABase64(opts.logoUrl);
@@ -87,7 +93,17 @@ export async function crearDocumentoConMachote(opts: {
   doc.setDrawColor(225);
   doc.line(14, 32, 196, 32);
   doc.setTextColor(0);
+}
 
+export async function crearDocumentoConMachote(opts: {
+  tituloDocumento: string;
+  proyectoNombre: string;
+  logoUrl?: string | null;
+  colorPrimario?: string;
+}) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF();
+  await dibujarEncabezado(doc, opts);
   return doc;
 }
 

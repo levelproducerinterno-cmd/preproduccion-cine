@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { DiaRodaje, DiaRodajeLocacion, DiaRodajeCrewLlamado, Talento, DiaRodajeTalentoLlamado } from "@/lib/types";
 import type { RenglonPlan, CrewParaLlamado } from "./PlanRodajeView";
-import { crearDocumentoConMachote, finalizarConPiePagina } from "@/lib/pdf-machote";
+import { crearDocumentoConMachote, dibujarEncabezado, finalizarConPiePagina } from "@/lib/pdf-machote";
 
 function textoLocacion(valorPropio: string | null | undefined, locacionDia: DiaRodajeLocacion | undefined) {
   if (valorPropio) return valorPropio;
@@ -72,7 +72,10 @@ export default function HojaLlamadoPdfBoton({
 
     let primero = true;
     for (const dia of dias) {
-      if (!primero) doc.addPage();
+      if (!primero) {
+        doc.addPage();
+        await dibujarEncabezado(doc, { tituloDocumento: TITULOS[modo], proyectoNombre, logoUrl, colorPrimario });
+      }
       primero = false;
       let y = 40;
 
