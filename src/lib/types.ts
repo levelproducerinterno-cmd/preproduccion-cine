@@ -28,6 +28,7 @@ export type PlanRodajeBloque = {
   hora: string | null;
   descripcion: string;
   orden: number;
+  solo_crew: boolean;
 };
 
 export type DiaRodajeLocacion = {

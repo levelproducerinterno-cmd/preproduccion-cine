@@ -20,6 +20,7 @@ import {
   actualizarCampoToma,
   agregarBloque,
   actualizarBloque,
+  actualizarSoloCrewBloque,
   eliminarBloque,
   reordenarRenglones,
   agregarLocacion,
@@ -42,7 +43,7 @@ import ReordenarDiasBoton from "./ReordenarDiasBoton";
 import { colorEscena, LEYENDA_COLORES } from "./colorEscena";
 
 export type RenglonPlan =
-  | { tipo: "bloque"; id: string; clave: number; hora: string | null; descripcion: string }
+  | { tipo: "bloque"; id: string; clave: number; hora: string | null; descripcion: string; soloCrew: boolean }
   | { tipo: "toma"; id: string; clave: number; toma: Toma; escena: Escena };
 
 export type CrewParaLlamado = {
@@ -567,7 +568,27 @@ function DiaPlanRodaje({
                       )}
                     </td>
                     <td className={`${td} text-center font-bold`} colSpan={8}>
-                      {r.descripcion}
+                      <div className="flex items-center justify-center gap-2">
+                        <span>{r.descripcion}</span>
+                        {esAdOProduccion ? (
+                          <label className="flex items-center gap-1 text-[0.6rem] font-normal normal-case text-neutral-500">
+                            <input
+                              type="checkbox"
+                              checked={r.soloCrew}
+                              onChange={(e) =>
+                                startTransition(() => actualizarSoloCrewBloque(proyectoId, r.id, e.target.checked))
+                              }
+                            />
+                            Solo crew
+                          </label>
+                        ) : (
+                          r.soloCrew && (
+                            <span className="rounded bg-neutral-400 px-1.5 py-0.5 text-[0.6rem] font-normal normal-case text-hueso">
+                              Solo crew
+                            </span>
+                          )
+                        )}
+                      </div>
                     </td>
                     {esAdOProduccion && (
                       <td className={td}>
@@ -653,14 +674,19 @@ function DiaPlanRodaje({
             <summary className="cursor-pointer text-xs font-semibold text-neutral-400">
               + Agregar bloque (llegada, desayuno, traslado, comida, desmontaje...)
             </summary>
-            <form action={agregarBloque.bind(null, proyectoId, dia.id)} className="mt-2 flex flex-wrap gap-2">
+            <form action={agregarBloque.bind(null, proyectoId, dia.id)} className="mt-2 flex flex-wrap items-center gap-2">
               <input name="hora" placeholder="Hora" className="w-28 rounded border border-neutral-300 px-2 py-1.5 text-xs" />
               <input name="descripcion" placeholder="Descripción (ej. DESAYUNO)" required className="flex-1 rounded border border-neutral-300 px-2 py-1.5 text-xs" />
               <input type="hidden" name="orden" value={(filas[filas.length - 1]?.clave ?? 0) + 1} />
+              <label className="flex items-center gap-1 text-[0.65rem] font-semibold text-neutral-500">
+                <input type="checkbox" name="solo_crew" />
+                Solo crew (no aplica a elenco)
+              </label>
               <button className="rounded bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-hueso">+ Agregar</button>
             </form>
             <p className="mt-1 text-[0.65rem] text-neutral-400">
               El bloque se agrega al final del día — luego arrastra el ⠿ de su renglón en la tabla de arriba para moverlo a su lugar.
+              Marca &quot;Solo crew&quot; para cosas como desayuno o comida que no aplican al elenco — así no sale en su hoja de llamado.
             </p>
           </details>
         )}
@@ -987,7 +1013,7 @@ function DiaHojaLlamado({
                     <td className={`${td} w-28`}>{r.tipo === "bloque" ? r.hora : r.toma.hora_inicio}</td>
                     <td className={td}>
                       {r.tipo === "bloque"
-                        ? r.descripcion
+                        ? `${r.descripcion}${r.soloCrew ? " (solo crew)" : ""}`
                         : `Esc. ${r.escena.numero} — ${r.toma.descripcion ?? r.escena.locacion ?? ""}`.trim() || "-"}
                     </td>
                   </tr>

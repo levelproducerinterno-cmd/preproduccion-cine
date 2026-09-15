@@ -67,7 +67,7 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
 
   const { data: bloquesRaw } = await supabase
     .from("plan_rodaje_bloques")
-    .select("id, dia_rodaje_id, hora, descripcion, orden")
+    .select("id, dia_rodaje_id, hora, descripcion, orden, solo_crew")
     .in("dia_rodaje_id", diaIds)
     .order("orden");
   const bloques = (bloquesRaw ?? []) as PlanRodajeBloque[];
@@ -128,7 +128,7 @@ export default async function PlanRodajePage(props: { params: Promise<{ id: stri
   for (const dia of dias) {
     const renglones: RenglonPlan[] = [];
     for (const b of bloques.filter((x) => x.dia_rodaje_id === dia.id)) {
-      renglones.push({ tipo: "bloque", id: b.id, clave: b.orden, hora: b.hora, descripcion: b.descripcion });
+      renglones.push({ tipo: "bloque", id: b.id, clave: b.orden, hora: b.hora, descripcion: b.descripcion, soloCrew: b.solo_crew });
     }
     const escenasDelDia = (escenasPorNumeroDia.get(dia.numero) ?? []).sort(
       (a, b) => (a.orden_del_dia ?? 0) - (b.orden_del_dia ?? 0)

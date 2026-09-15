@@ -93,6 +93,7 @@ export async function agregarBloque(proyectoId: string, diaRodajeId: string, for
   if (!descripcion) return;
   const hora = String(formData.get("hora") || "").trim() || null;
   const orden = Number(formData.get("orden") || 0);
+  const soloCrew = formData.get("solo_crew") === "on";
 
   const supabase = await createClient();
   const {
@@ -105,6 +106,7 @@ export async function agregarBloque(proyectoId: string, diaRodajeId: string, for
     hora,
     descripcion,
     orden,
+    solo_crew: soloCrew,
     created_by: persona?.id ?? null,
   });
 
@@ -117,6 +119,12 @@ export async function actualizarBloque(proyectoId: string, bloqueId: string, cam
     .from("plan_rodaje_bloques")
     .update({ [campo]: valor || null })
     .eq("id", bloqueId);
+  revalidatePath(ruta(proyectoId));
+}
+
+export async function actualizarSoloCrewBloque(proyectoId: string, bloqueId: string, soloCrew: boolean) {
+  const supabase = await createClient();
+  await supabase.from("plan_rodaje_bloques").update({ solo_crew: soloCrew }).eq("id", bloqueId);
   revalidatePath(ruta(proyectoId));
 }
 

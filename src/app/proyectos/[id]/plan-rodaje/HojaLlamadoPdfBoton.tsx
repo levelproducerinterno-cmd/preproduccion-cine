@@ -163,7 +163,9 @@ export default function HojaLlamadoPdfBoton({
         y = (doc as any).lastAutoTable.finalY + 6;
       }
 
-      const renglones = renglonesPorDia[dia.id] ?? [];
+      const renglones = (renglonesPorDia[dia.id] ?? []).filter(
+        (r) => incluyeCrew || r.tipo !== "bloque" || !r.soloCrew
+      );
       if (renglones.length > 0) {
         autoTable(doc, {
           startY: y,
