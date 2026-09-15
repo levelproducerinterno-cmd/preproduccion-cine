@@ -42,7 +42,9 @@ export default function DocumentoPdfBoton({
       y += 8;
     }
 
-    const cuerpoConNombre = cuerpo.replace(/\{\{\s*nombre\s*\}\}/gi, paraQuien.trim() || "____________________");
+    const cuerpoConNombre = cuerpo
+      .replace(/\{\{\s*nombre\s*\}\}/gi, paraQuien.trim() || "____________________")
+      .replace(/\{\{\s*proyecto\s*\}\}/gi, proyectoNombre);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);

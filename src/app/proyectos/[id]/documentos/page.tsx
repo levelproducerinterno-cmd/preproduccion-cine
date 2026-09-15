@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getProyectoContext } from "@/lib/proyecto-context";
 import { crearPlantilla, eliminarPlantilla } from "./actions";
 import DocumentoPdfBoton from "./DocumentoPdfBoton";
+import { DOCUMENTOS_PREDETERMINADOS } from "@/lib/documentos-predeterminados";
 
 type Plantilla = { id: string; nombre: string; cuerpo: string };
 
@@ -22,13 +23,41 @@ export default async function DocumentosPage(props: { params: Promise<{ id: stri
     <div className="grid gap-8">
       <section>
         <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
+          Documentos predeterminados
+        </h2>
+        <p className="mb-4 text-xs text-neutral-400">
+          Listos para descargar o imprimir en cualquier proyecto — no hay que crearlos ni copiarlos. Déjalo
+          "Generado para" vacío para imprimirlo en blanco y que la persona ponga su nombre y firma a mano.
+        </p>
+        <div className="grid gap-3">
+          {DOCUMENTOS_PREDETERMINADOS.map((d) => (
+            <div key={d.id} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <div className="mb-2 font-semibold text-negro">{d.nombre}</div>
+              <DocumentoPdfBoton
+                nombrePlantilla={d.nombre}
+                cuerpo={d.cuerpo}
+                proyectoNombre={proyecto.nombre}
+                logoUrl={proyecto.logo_url}
+                colorPrimario={proyecto.color_primario}
+                firmaUrl={proyecto.firma_url}
+                nombreResponsable={proyecto.nombre_responsable}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-neutral-500">
           Tus documentos ({plantillas.length})
         </h2>
         <p className="mb-4 text-xs text-neutral-400">
           Escribe el texto de tu responsiva/contrato tal como quieres que salga. Puedes usar{" "}
-          <code className="rounded bg-neutral-100 px-1">{"{{nombre}}"}</code> en el texto para que se
-          reemplace automáticamente por la persona a la que se lo generes. Todos los documentos llevan
-          el mismo membrete (logo, colores, fecha) y la firma que subiste en Ajustes.
+          <code className="rounded bg-neutral-100 px-1">{"{{nombre}}"}</code> para que se reemplace
+          automáticamente por la persona a la que se lo generes, y{" "}
+          <code className="rounded bg-neutral-100 px-1">{"{{proyecto}}"}</code> por el nombre del proyecto.
+          Todos los documentos llevan el mismo membrete (logo, colores, fecha) y la firma que subiste en
+          Ajustes.
         </p>
         <div className="grid gap-3">
           {plantillas.map((p) => (
