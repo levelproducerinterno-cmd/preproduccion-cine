@@ -150,18 +150,46 @@ export default function PlanRodajeView({
             renglonesPorDia={renglonesPorDia}
           />
         ) : (
-          <HojaLlamadoPdfBoton
-            proyectoNombre={proyectoNombre}
-            logoUrl={logoUrl}
-            colorPrimario={colorPrimario}
-            dias={dias}
-            renglonesPorDia={renglonesPorDia}
-            locaciones={locaciones}
-            crew={crew}
-            crewLlamados={crewLlamados}
-            talento={talento}
-            talentoLlamados={talentoLlamados}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <HojaLlamadoPdfBoton
+              proyectoNombre={proyectoNombre}
+              logoUrl={logoUrl}
+              colorPrimario={colorPrimario}
+              dias={dias}
+              renglonesPorDia={renglonesPorDia}
+              locaciones={locaciones}
+              crew={crew}
+              crewLlamados={crewLlamados}
+              talento={talento}
+              talentoLlamados={talentoLlamados}
+            />
+            <HojaLlamadoPdfBoton
+              proyectoNombre={proyectoNombre}
+              logoUrl={logoUrl}
+              colorPrimario={colorPrimario}
+              dias={dias}
+              renglonesPorDia={renglonesPorDia}
+              locaciones={locaciones}
+              crew={crew}
+              crewLlamados={crewLlamados}
+              talento={talento}
+              talentoLlamados={talentoLlamados}
+              modo="elenco"
+            />
+            <HojaLlamadoPdfBoton
+              proyectoNombre={proyectoNombre}
+              logoUrl={logoUrl}
+              colorPrimario={colorPrimario}
+              dias={dias}
+              renglonesPorDia={renglonesPorDia}
+              locaciones={locaciones}
+              crew={crew}
+              crewLlamados={crewLlamados}
+              talento={talento}
+              talentoLlamados={talentoLlamados}
+              modo="crew"
+            />
+          </div>
         )}
       </div>
 

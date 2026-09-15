@@ -11,6 +11,24 @@ function textoLocacion(valorPropio: string | null | undefined, locacionDia: DiaR
   return locacionDia.url_maps ? `${locacionDia.nombre} (${locacionDia.url_maps})` : locacionDia.nombre;
 }
 
+const TITULOS = {
+  completo: "Hoja de Llamado",
+  elenco: "Hoja de Llamado — Elenco",
+  crew: "Hoja de Llamado — Crew",
+} as const;
+
+const ETIQUETAS_BOTON = {
+  completo: "Descargar Hojas de Llamado en PDF",
+  elenco: "Solo Elenco en PDF",
+  crew: "Solo Crew en PDF",
+} as const;
+
+const SUFIJOS_ARCHIVO = {
+  completo: "",
+  elenco: "-elenco",
+  crew: "-crew",
+} as const;
+
 export default function HojaLlamadoPdfBoton({
   proyectoNombre,
   logoUrl,
@@ -22,6 +40,7 @@ export default function HojaLlamadoPdfBoton({
   crewLlamados,
   talento,
   talentoLlamados,
+  modo = "completo",
 }: {
   proyectoNombre: string;
   logoUrl: string | null;
@@ -33,8 +52,11 @@ export default function HojaLlamadoPdfBoton({
   crewLlamados: DiaRodajeCrewLlamado[];
   talento: Talento[];
   talentoLlamados: DiaRodajeTalentoLlamado[];
+  modo?: "completo" | "elenco" | "crew";
 }) {
   const [cargando, setCargando] = useState(false);
+  const incluyeCrew = modo !== "elenco";
+  const incluyeTalento = modo !== "crew";
 
   async function descargar() {
     setCargando(true);
@@ -42,7 +64,7 @@ export default function HojaLlamadoPdfBoton({
     const autoTable = autoTableModule.default;
 
     const doc = await crearDocumentoConMachote({
-      tituloDocumento: "Hoja de Llamado",
+      tituloDocumento: TITULOS[modo],
       proyectoNombre,
       logoUrl,
       colorPrimario,
@@ -84,34 +106,36 @@ export default function HojaLlamadoPdfBoton({
         y = (doc as any).lastAutoTable.finalY + 6;
       }
 
-      const llamadoPorCrew = new Map(crewLlamados.filter((c) => c.dia_rodaje_id === dia.id).map((c) => [c.proyecto_crew_id, c]));
-      autoTable(doc, {
-        startY: y,
-        head: [["Puesto", "Nombre", "Llamado", "Locación"]],
-        body: crew.map((c) => {
-          const ll = llamadoPorCrew.get(c.id);
-          if (ll?.no_disponible) return [c.puesto_especifico ?? "-", c.personas.nombre, "No disponible", "-"];
-          return [
-            c.puesto_especifico ?? "-",
-            c.personas.nombre,
-            ll?.llamado || dia.llamado_general || "-",
-            textoLocacion(ll?.locacion_url, locacionesDia[0]),
-          ];
-        }),
-        theme: "grid",
-        styles: { fontSize: 7.5, cellPadding: 1.5 },
-        headStyles: { fillColor: [10, 9, 8], textColor: 255 },
-        margin: { left: 14, right: 14 },
-        didParseCell: (data) => {
-          const c = crew[data.row.index];
-          if (c && llamadoPorCrew.get(c.id)?.no_disponible) data.cell.styles.textColor = [160, 160, 160];
-        },
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      y = (doc as any).lastAutoTable.finalY + 6;
+      if (incluyeCrew) {
+        const llamadoPorCrew = new Map(crewLlamados.filter((c) => c.dia_rodaje_id === dia.id).map((c) => [c.proyecto_crew_id, c]));
+        autoTable(doc, {
+          startY: y,
+          head: [["Puesto", "Nombre", "Llamado", "Locación"]],
+          body: crew.map((c) => {
+            const ll = llamadoPorCrew.get(c.id);
+            if (ll?.no_disponible) return [c.puesto_especifico ?? "-", c.personas.nombre, "No disponible", "-"];
+            return [
+              c.puesto_especifico ?? "-",
+              c.personas.nombre,
+              ll?.llamado || dia.llamado_general || "-",
+              textoLocacion(ll?.locacion_url, locacionesDia[0]),
+            ];
+          }),
+          theme: "grid",
+          styles: { fontSize: 7.5, cellPadding: 1.5 },
+          headStyles: { fillColor: [10, 9, 8], textColor: 255 },
+          margin: { left: 14, right: 14 },
+          didParseCell: (data) => {
+            const c = crew[data.row.index];
+            if (c && llamadoPorCrew.get(c.id)?.no_disponible) data.cell.styles.textColor = [160, 160, 160];
+          },
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        y = (doc as any).lastAutoTable.finalY + 6;
+      }
 
       const llamadoPorTalento = new Map(talentoLlamados.filter((t) => t.dia_rodaje_id === dia.id).map((t) => [t.talento_id, t]));
-      if (talento.length > 0) {
+      if (incluyeTalento && talento.length > 0) {
         autoTable(doc, {
           startY: y,
           head: [["Personaje", "Nombre", "Llamado", "Locación", "Indicaciones"]],
@@ -165,7 +189,7 @@ export default function HojaLlamadoPdfBoton({
     }
 
     await finalizarConPiePagina(doc);
-    doc.save(`hoja-de-llamado-${proyectoNombre.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+    doc.save(`hoja-de-llamado${SUFIJOS_ARCHIVO[modo]}-${proyectoNombre.replace(/\s+/g, "-").toLowerCase()}.pdf`);
     setCargando(false);
   }
 
@@ -173,9 +197,13 @@ export default function HojaLlamadoPdfBoton({
     <button
       onClick={descargar}
       disabled={cargando}
-      className="rounded bg-neutral-800 px-4 py-2 text-sm font-semibold text-hueso hover:brightness-110 disabled:opacity-50"
+      className={
+        modo === "completo"
+          ? "rounded bg-neutral-800 px-4 py-2 text-sm font-semibold text-hueso hover:brightness-110 disabled:opacity-50"
+          : "rounded border border-neutral-300 px-3 py-2 text-xs font-semibold text-neutral-500 hover:border-rojo hover:text-rojo disabled:opacity-50"
+      }
     >
-      {cargando ? "Generando PDF..." : "Descargar Hojas de Llamado en PDF"}
+      {cargando ? "Generando PDF..." : ETIQUETAS_BOTON[modo]}
     </button>
   );
 }
