@@ -10,6 +10,48 @@ export type DocumentoPredeterminado = {
 
 export const DOCUMENTOS_PREDETERMINADOS: DocumentoPredeterminado[] = [
   {
+    id: "contrato-prestador-servicios",
+    nombre: "Contrato de prestación de servicios (crew)",
+    cuerpo: `CONTRATO DE PRESTACIÓN DE SERVICIOS
+
+Contrato que celebran, por una parte, LEVEL PRODUCER ("LA PRODUCTORA"), representada en este acto por su responsable (firma al calce), y por la otra, {{prestador}} ("EL PRESTADOR"), en relación con la producción audiovisual denominada "{{proyecto}}" (el "Proyecto"), al tenor de las siguientes cláusulas:
+
+PRIMERA. OBJETO.
+EL PRESTADOR se compromete a prestar a LA PRODUCTORA sus servicios profesionales como {{puesto}} para el Proyecto, conforme a las fechas y condiciones acordadas entre ambas partes previo a la firma del presente contrato.
+
+SEGUNDA. CONTRAPRESTACIÓN Y FORMA DE PAGO.
+LA PRODUCTORA pagará a EL PRESTADOR la cantidad de \${{tarifa_diaria}} M.N. por día de trabajo, por un total estimado de {{dias_trabajo}} día(s), pagadero {{momento_pago}}.
+
+TERCERA. CANCELACIÓN POR LA PRODUCTORA.
+Si LA PRODUCTORA cancela una fecha de trabajo ya confirmada con EL PRESTADOR con menos de 48 (cuarenta y ocho) horas de anticipación, se compromete a pagarle el 50% (cincuenta por ciento) de la tarifa pactada para ese día, como compensación por el tiempo reservado.
+
+CUARTA. EQUIPO.
+En caso de que EL PRESTADOR aporte equipo propio (cámaras, luces, accesorios u otro) para la prestación del servicio, cada parte será responsable del cuidado de su propio equipo. LA PRODUCTORA no se hace responsable por daño, pérdida o robo del equipo de EL PRESTADOR, salvo negligencia comprobada de LA PRODUCTORA o su personal; lo mismo aplica en sentido inverso respecto del equipo que LA PRODUCTORA llegara a facilitar a EL PRESTADOR.
+
+QUINTA. CONFIDENCIALIDAD.
+EL PRESTADOR se obliga a mantener confidencial toda la información relacionada con el Proyecto y con el cliente de LA PRODUCTORA a la que tenga acceso con motivo de sus servicios (incluyendo guion, locaciones, fechas y material grabado), absteniéndose de divulgarla, compartirla o publicarla antes de que el Proyecto sea liberado oficialmente por LA PRODUCTORA o su cliente.
+
+SEXTA. RELACIÓN ENTRE LAS PARTES.
+El presente contrato no crea relación laboral, de sociedad ni de representación entre LA PRODUCTORA y EL PRESTADOR. EL PRESTADOR presta sus servicios de forma independiente, sin subordinación ni horario fijo impuesto por LA PRODUCTORA más allá de lo necesario para la coordinación del Proyecto.
+
+SÉPTIMA. MODIFICACIONES.
+Cualquier modificación al presente contrato (alcance, fechas, tarifa) deberá constar por escrito y ser firmada por ambas partes para tener validez.
+
+Leído que fue el presente contrato y enteradas las partes de su contenido y alcance, lo firman de conformidad:
+
+Fecha: {{fecha_firma}}
+
+
+POR EL PRESTADOR
+
+Nombre completo: {{prestador}}
+
+Firma: _________________________________
+
+
+POR LEVEL PRODUCER`,
+  },
+  {
     id: "contrato-cliente",
     nombre: "Contrato de producción con cliente",
     cuerpo: `CONTRATO DE PRESTACIÓN DE SERVICIOS DE PRODUCCIÓN AUDIOVISUAL

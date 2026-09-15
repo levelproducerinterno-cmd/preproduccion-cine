@@ -54,7 +54,7 @@ export default function DocumentoPdfBoton({
     });
 
     let y = 42;
-    const nombreGeneradoPara = valores["nombre"]?.trim() || valores["cliente"]?.trim();
+    const nombreGeneradoPara = valores["nombre"]?.trim() || valores["cliente"]?.trim() || valores["prestador"]?.trim();
     if (nombreGeneradoPara) {
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
